@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Providence Tutorials</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0f2044 0%, #1a5276 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .login-container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      width: 100%;
+      max-width: 400px;
+      padding: 40px;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .logo h1 {
+      font-family: 'Playfair Display', serif;
+      color: #0f2044;
+      font-size: 28px;
+      margin-bottom: 5px;
+    }
+
+    .logo p {
+      color: #7a7a8a;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #7a7a8a;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 6px;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #e8e0d0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+      outline: none;
+      border-color: #c9a84c;
+      box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.12);
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 11px;
+      background: #0f2044;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 10px;
+    }
+
+    .btn-login:hover {
+      background: #162d5a;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(15, 32, 68, 0.3);
+    }
+
+    .btn-login:active {
+      transform: translateY(0);
+    }
+
+    .error-message {
+      background: #f8d7da;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .error-message.show {
+      display: block;
+    }
+
+    .demo-credentials {
+      background: #f0f7ff;
+      border: 1px solid #c0d8f0;
+      border-radius: 8px;
+      padding: 14px;
+      margin-top: 20px;
+      font-size: 12px;
+      color: #1a4a7a;
+    }
+
+    .demo-credentials strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .demo-credentials code {
+      background: rgba(0, 0, 0, 0.05);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-container">
+  <div class="logo">
+    <h1>Providence<br>Tutorials</h1>
+    <p>Fee Management System</p>
+  </div>
+
+  <div class="error-message" id="error-msg"></div>
+
+  <form onsubmit="handleLogin(event)">
+    <div class="form-group">
+      <label for="uid">User ID</label>
+      <input type="text" id="uid" placeholder="e.g. admin" required autofocus>
+    </div>
+
+    <div class="form-group">
+      <label for="pwd">Password</label>
+      <input type="password" id="pwd" placeholder="Enter password" required>
+    </div>
+
+    <button type="submit" class="btn-login">🔐 Sign In</button>
+  </form>
+
+  <div class="demo-credentials">
+    <strong>📌 Demo Credentials:</strong>
+    User ID: <code>admin</code><br>
+    Password: <code>admin123</code><br>
+    <br>
+    ⚠️ Change these in production!
+  </div>
+</div>
+
+<script>
+  /**
+   * Handle login form submission
+   */
+  function handleLogin(event) {
+    event.preventDefault();
+
+    const uid = document.getElementById('uid').value.trim().toLowerCase();
+    const password = document.getElementById('pwd').value;
+    const errorMsg = document.getElementById('error-msg');
+
+    if (!uid || !password) {
+      showError('Please enter both User ID and Password');
+      return;
+    }
+
+    // Note: This assumes USER_MANAGEMENT_SYSTEM.js is loaded
+    // You might need to include it before this script
+    if (typeof loginUser === 'undefined') {
+      showError('System initialization error. Please refresh the page.');
+      return;
+    }
+
+    const user = loginUser(uid, password);
+    if (user) {
+      // Redirect to dashboard
+      window.location.href = 'dashboard.html';
+    } else {
+      showError('Invalid User ID or Password');
+      document.getElementById('pwd').value = '';
+      document.getElementById('pwd').focus();
+    }
+  }
+
+  /**
+   * Show error message
+   */
+  function showError(message) {
+    const errorMsg = document.getElementById('error-msg');
+    errorMsg.textContent = message;
+    errorMsg.classList.add('show');
+    setTimeout(() => {
+      errorMsg.classList.remove('show');
+    }, 5000);
+  }
+
+  // Allow Enter key in password field
+  document.getElementById('pwd').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      handleLogin(e);
+    }
+  });
+</script>
+
+</body>
+</html>
