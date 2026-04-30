@@ -6,1673 +6,2407 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Providence Tutorials – Fee Management</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
 
-  :root {
-    --navy: #0f2044;
-    --gold: #c9a84c;
-    --gold-light: #f0d98a;
-    --cream: #fdf8f0;
-    --green: #1a7a4a;
-    --red: #c0392b;
-    --blue: #1a5276;
-    --sidebar-w: 240px;
-    --card: #ffffff;
-    --border: #e8e0d0;
-    --text: #1a1a2e;
-    --muted: #7a7a8a;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--cream);
-    color: var(--text);
-    display: flex;
-    min-height: 100vh;
-  }
-
-  /* ── SIDEBAR ── */
-  #sidebar {
-    width: var(--sidebar-w);
-    background: var(--navy);
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    top: 0; left: 0; bottom: 0;
-    z-index: 100;
-  }
-  .logo {
-    padding: 24px 20px 20px;
-    border-bottom: 1px solid rgba(201,168,76,.25);
-  }
-  .logo h1 {
-    font-family: 'Playfair Display', serif;
-    color: var(--gold);
-    font-size: 17px;
-    line-height: 1.3;
-  }
-  .logo p { color: rgba(255,255,255,.5); font-size: 11px; margin-top: 2px; }
-
-  nav { flex: 1; padding: 16px 0; }
-  .nav-item {
-    display: flex; align-items: center; gap: 12px;
-    padding: 12px 20px;
-    color: rgba(255,255,255,.65);
-    cursor: pointer;
-    font-size: 13.5px;
-    font-weight: 500;
-    transition: all .2s;
-    border-left: 3px solid transparent;
-  }
-  .nav-item:hover { color: #fff; background: rgba(255,255,255,.06); }
-  .nav-item.active { color: var(--gold); border-left-color: var(--gold); background: rgba(201,168,76,.1); }
-  .nav-item .icon { font-size: 16px; width: 18px; text-align: center; }
-
-  .sidebar-footer {
-    padding: 16px 20px;
-    border-top: 1px solid rgba(255,255,255,.1);
-    color: rgba(255,255,255,.4);
-    font-size: 11px;
-  }
-
-  /* ── MAIN ── */
-  #main {
-    margin-left: var(--sidebar-w);
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-  }
-
-  .topbar {
-    background: #fff;
-    border-bottom: 1px solid var(--border);
-    padding: 14px 28px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: sticky; top: 0; z-index: 50;
-  }
-  .topbar h2 { font-size: 18px; font-weight: 600; color: var(--navy); }
-  .topbar-date { font-size: 12px; color: var(--muted); }
-
-  .content { padding: 28px; }
-
-  /* ── PAGES ── */
-  .page { display: none; }
-  .page.active { display: block; }
-
-  /* ── CARDS ── */
-  .cards-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 24px; }
-  .stat-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-    position: relative;
-    overflow: hidden;
-  }
-  .stat-card::before {
-    content: '';
-    position: absolute; top: 0; left: 0; right: 0; height: 3px;
-  }
-  .stat-card.blue::before { background: var(--blue); }
-  .stat-card.green::before { background: var(--green); }
-  .stat-card.red::before { background: var(--red); }
-  .stat-card.gold::before { background: var(--gold); }
-  .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); }
-  .stat-value { font-size: 26px; font-weight: 700; color: var(--navy); margin-top: 8px; }
-  .stat-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
-
-  /* ── PANELS ── */
-  .panel {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-    margin-bottom: 20px;
-  }
-  .panel-head {
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: #fafaf8;
-  }
-  .panel-head h3 { font-size: 14px; font-weight: 600; color: var(--navy); }
-  .panel-body { padding: 20px; }
-
-  /* ── FORMS ── */
-  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .form-grid.cols3 { grid-template-columns: 1fr 1fr 1fr; }
-  .form-group { display: flex; flex-direction: column; gap: 5px; }
-  .form-group.full { grid-column: 1/-1; }
-  label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
-  input, select, textarea {
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 9px 12px;
-    font-size: 13.5px;
-    font-family: 'DM Sans', sans-serif;
-    color: var(--text);
-    background: #fff;
-    transition: border .2s;
-    outline: none;
-  }
-  input:focus, select:focus, textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,168,76,.12); }
-
-  /* ── BUTTONS ── */
-  .btn {
-    padding: 9px 18px;
-    border-radius: 8px;
-    border: none;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
-    transition: all .2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .btn-primary { background: var(--navy); color: #fff; }
-  .btn-primary:hover { background: #162d5a; }
-  .btn-gold { background: var(--gold); color: var(--navy); }
-  .btn-gold:hover { background: #b8943e; }
-  .btn-green { background: var(--green); color: #fff; }
-  .btn-green:hover { background: #145e38; }
-  .btn-red { background: var(--red); color: #fff; }
-  .btn-red:hover { background: #a93226; }
-  .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
-  .btn-outline:hover { border-color: var(--navy); color: var(--navy); }
-  .btn-sm { padding: 5px 12px; font-size: 12px; }
-
-  /* ── TABLE ── */
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); background: #fafaf8; border-bottom: 1px solid var(--border); }
-  td { padding: 11px 14px; border-bottom: 1px solid #f0ece4; vertical-align: middle; }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: #fdf9f2; }
-
-  .badge {
-    display: inline-block;
-    padding: 3px 9px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 600;
-  }
-  .badge-green { background: #d4edda; color: #155724; }
-  .badge-red { background: #f8d7da; color: #721c24; }
-  .badge-yellow { background: #fff3cd; color: #856404; }
-  .badge-blue { background: #cce5ff; color: #004085; }
-
-  /* ── MODAL ── */
-  .modal-overlay {
-    display: none;
-    position: fixed; inset: 0;
-    background: rgba(15,32,68,.55);
-    backdrop-filter: blur(3px);
-    z-index: 999;
-    align-items: center;
-    justify-content: center;
-  }
-  .modal-overlay.open { display: flex; }
-  .modal {
-    background: #fff;
-    border-radius: 14px;
-    width: 90%;
-    max-width: 580px;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: 0 20px 60px rgba(0,0,0,.25);
-  }
-  .modal-header {
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .modal-header h3 { font-size: 16px; font-weight: 600; color: var(--navy); }
-  .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--muted); }
-  .modal-body { padding: 24px; }
-  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
-
-  /* ── RECEIPT ── */
-  #receipt-area {
-    display: none;
-    background: #fff;
-    padding: 24px;
-    font-family: 'DM Sans', sans-serif;
-  }
-
-  @media print {
-    body * { visibility: hidden; }
-    #receipt-print, #receipt-print * { visibility: visible; }
-    #receipt-print {
-      position: fixed; top: 0; left: 0;
-      width: 148mm; /* half A4 */
-      padding: 14mm;
-      font-size: 11pt;
+    :root {
+        --navy: #0f2044;
+        --gold: #c9a84c;
+        --gold-light: #f0d98a;
+        --cream: #fdf8f0;
+        --green: #1a7a4a;
+        --red: #c0392b;
+        --blue: #1a5276;
+        --sidebar-w: 240px;
+        --card: #ffffff;
+        --border: #e8e0d0;
+        --text: #1a1a2e;
+        --muted: #7a7a8a;
     }
-  }
 
-  .receipt-paper {
-    width: 148mm;
-    min-height: 100mm;
-    border: 2px solid var(--navy);
-    border-radius: 6px;
-    padding: 16px;
-    margin: 0 auto;
-    position: relative;
-  }
-  .receipt-header { text-align: center; margin-bottom: 12px; }
-  .receipt-header h2 { font-family: 'Playfair Display',serif; color: var(--navy); font-size: 18px; }
-  .receipt-header p { font-size: 10px; color: var(--muted); }
-  .receipt-divider { border: none; border-top: 1.5px dashed var(--border); margin: 10px 0; }
-  .receipt-row { display: flex; justify-content: space-between; font-size: 12px; margin: 5px 0; }
-  .receipt-row .lbl { color: var(--muted); }
-  .receipt-total { display: flex; justify-content: space-between; font-size: 14px; font-weight: 700; margin-top: 10px; padding-top: 8px; border-top: 2px solid var(--navy); }
-  .receipt-stamp { text-align: center; margin-top: 14px; font-size: 10px; color: var(--muted); }
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
 
-  /* search bar */
-  .search-bar { display: flex; gap: 10px; margin-bottom: 16px; }
-  .search-bar input { flex: 1; }
+    body {
+        font-family: 'DM Sans', sans-serif;
+        background: var(--cream);
+        color: var(--text);
+        display: flex;
+        min-height: 100vh;
+    }
 
-  .empty-state { text-align: center; padding: 40px; color: var(--muted); font-size: 13px; }
-  .empty-state .big { font-size: 36px; margin-bottom: 8px; }
+    /* ── SIDEBAR ── */
+    #sidebar {
+        width: var(--sidebar-w);
+        background: var(--navy);
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 100;
+    }
+    .logo {
+        padding: 24px 20px 20px;
+        border-bottom: 1px solid rgba(201, 168, 76, .25);
+    }
+    .logo h1 {
+        font-family: 'Playfair Display', serif;
+        color: var(--gold);
+        font-size: 17px;
+        line-height: 1.3;
+    }
+    .logo p {
+        color: rgba(255, 255, 255, .5);
+        font-size: 11px;
+        margin-top: 2px;
+    }
 
-  .section-title {
-    font-size: 13px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .7px;
-    color: var(--muted);
-    margin-bottom: 12px;
-    margin-top: 4px;
-  }
+    nav {
+        flex: 1;
+        padding: 16px 0;
+    }
+    .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 20px;
+        color: rgba(255, 255, 255, .65);
+        cursor: pointer;
+        font-size: 13.5px;
+        font-weight: 500;
+        transition: all .2s;
+        border-left: 3px solid transparent;
+    }
+    .nav-item:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, .06);
+    }
+    .nav-item.active {
+        color: var(--gold);
+        border-left-color: var(--gold);
+        background: rgba(201, 168, 76, .1);
+    }
+    .nav-item .icon {
+        font-size: 16px;
+        width: 18px;
+        text-align: center;
+    }
 
-  .due-alert { background: #fff5f5; border: 1px solid #f5c6cb; border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; font-size: 13px; color: #842029; display: flex; align-items: center; gap: 10px; }
+    .sidebar-footer {
+        padding: 16px 20px;
+        border-top: 1px solid rgba(255, 255, 255, .1);
+        color: rgba(255, 255, 255, .4);
+        font-size: 11px;
+    }
 
-  .wa-btn { background: #25D366; color: #fff; }
-  .wa-btn:hover { background: #1da851; }
+    /* ── MAIN ── */
+    #main {
+        margin-left: var(--sidebar-w);
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
 
-  /* tabs */
-  .tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 20px; }
-  .tab { padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--muted); border-bottom: 3px solid transparent; margin-bottom: -2px; }
-  .tab.active { color: var(--navy); border-bottom-color: var(--gold); }
+    .topbar {
+        background: #fff;
+        border-bottom: 1px solid var(--border);
+        padding: 14px 28px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .topbar h2 {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--navy);
+    }
+    .topbar-date {
+        font-size: 12px;
+        color: var(--muted);
+    }
 
-  .help-text { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
-  .settings-tab { display:none; }
-  .settings-tab.active-tab { display:block; }
+    /* ── SESSION SELECTOR (NEW) ── */
+    .session-selector {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #fdf8f0;
+        border: 2px solid var(--gold);
+        border-radius: 20px;
+        padding: 6px 14px;
+    }
+    .session-selector label {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--navy);
+        text-transform: uppercase;
+        letter-spacing: .4px;
+        white-space: nowrap;
+    }
+    .session-selector select {
+        border: none;
+        background: transparent;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--navy);
+        cursor: pointer;
+        outline: none;
+        font-family: 'DM Sans', sans-serif;
+        padding: 2px 4px;
+    }
+    .session-badge {
+        display: inline-block;
+        background: var(--gold);
+        color: var(--navy);
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .5px;
+    }
+
+    .content {
+        padding: 28px;
+    }
+
+    /* ── PAGES ── */
+    .page {
+        display: none;
+    }
+    .page.active {
+        display: block;
+    }
+
+    /* ── CARDS ── */
+    .cards-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .stat-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+        position: relative;
+        overflow: hidden;
+    }
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+    }
+    .stat-card.blue::before {
+        background: var(--blue);
+    }
+    .stat-card.green::before {
+        background: var(--green);
+    }
+    .stat-card.red::before {
+        background: var(--red);
+    }
+    .stat-card.gold::before {
+        background: var(--gold);
+    }
+    .stat-label {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .6px;
+        color: var(--muted);
+    }
+    .stat-value {
+        font-size: 26px;
+        font-weight: 700;
+        color: var(--navy);
+        margin-top: 8px;
+    }
+    .stat-sub {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 4px;
+    }
+
+    /* ── PANELS ── */
+    .panel {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+    .panel-head {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #fafaf8;
+    }
+    .panel-head h3 {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--navy);
+    }
+    .panel-body {
+        padding: 20px;
+    }
+
+    /* ── FORMS ── */
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+    }
+    .form-grid.cols3 {
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+    .form-group.full {
+        grid-column: 1/-1;
+    }
+    label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: .4px;
+    }
+    input,
+    select,
+    textarea {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 9px 12px;
+        font-size: 13.5px;
+        font-family: 'DM Sans', sans-serif;
+        color: var(--text);
+        background: #fff;
+        transition: border .2s;
+        outline: none;
+    }
+    input:focus,
+    select:focus,
+    textarea:focus {
+        border-color: var(--gold);
+        box-shadow: 0 0 0 3px rgba(201, 168, 76, .12);
+    }
+
+    /* ── BUTTONS ── */
+    .btn {
+        padding: 9px 18px;
+        border-radius: 8px;
+        border: none;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: 'DM Sans', sans-serif;
+        transition: all .2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .btn-primary {
+        background: var(--navy);
+        color: #fff;
+    }
+    .btn-primary:hover {
+        background: #162d5a;
+    }
+    .btn-gold {
+        background: var(--gold);
+        color: var(--navy);
+    }
+    .btn-gold:hover {
+        background: #b8943e;
+    }
+    .btn-green {
+        background: var(--green);
+        color: #fff;
+    }
+    .btn-green:hover {
+        background: #145e38;
+    }
+    .btn-red {
+        background: var(--red);
+        color: #fff;
+    }
+    .btn-red:hover {
+        background: #a93226;
+    }
+    .btn-outline {
+        background: transparent;
+        border: 1.5px solid var(--border);
+        color: var(--text);
+    }
+    .btn-outline:hover {
+        border-color: var(--navy);
+        color: var(--navy);
+    }
+    .btn-sm {
+        padding: 5px 12px;
+        font-size: 12px;
+    }
+
+    /* ── TABLE ── */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+    th {
+        padding: 10px 14px;
+        text-align: left;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        color: var(--muted);
+        background: #fafaf8;
+        border-bottom: 1px solid var(--border);
+    }
+    td {
+        padding: 11px 14px;
+        border-bottom: 1px solid #f0ece4;
+        vertical-align: middle;
+    }
+    tr:last-child td {
+        border-bottom: none;
+    }
+    tr:hover td {
+        background: #fdf9f2;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 3px 9px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+    .badge-green {
+        background: #d4edda;
+        color: #155724;
+    }
+    .badge-red {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    .badge-yellow {
+        background: #fff3cd;
+        color: #856404;
+    }
+    .badge-blue {
+        background: #cce5ff;
+        color: #004085;
+    }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 32, 68, .55);
+        backdrop-filter: blur(3px);
+        z-index: 999;
+        align-items: center;
+        justify-content: center;
+    }
+    .modal-overlay.open {
+        display: flex;
+    }
+    .modal {
+        background: #fff;
+        border-radius: 14px;
+        width: 90%;
+        max-width: 620px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, .25);
+    }
+    .modal-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .modal-header h3 {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--navy);
+    }
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+        color: var(--muted);
+    }
+    .modal-body {
+        padding: 24px;
+    }
+    .modal-footer {
+        padding: 16px 24px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+
+    /* ── RECEIPT ── */
+    #receipt-area {
+        display: none;
+        background: #fff;
+        padding: 24px;
+        font-family: 'DM Sans', sans-serif;
+    }
+
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        #receipt-print,
+        #receipt-print * {
+            visibility: visible;
+        }
+        #receipt-print {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 148mm;
+            padding: 14mm;
+            font-size: 11pt;
+        }
+    }
+
+    .receipt-paper {
+        width: 148mm;
+        min-height: 100mm;
+        border: 2px solid var(--navy);
+        border-radius: 6px;
+        padding: 16px;
+        margin: 0 auto;
+        position: relative;
+    }
+    .receipt-header {
+        text-align: center;
+        margin-bottom: 12px;
+    }
+    .receipt-header h2 {
+        font-family: 'Playfair Display', serif;
+        color: var(--navy);
+        font-size: 18px;
+    }
+    .receipt-header p {
+        font-size: 10px;
+        color: var(--muted);
+    }
+    .receipt-divider {
+        border: none;
+        border-top: 1.5px dashed var(--border);
+        margin: 10px 0;
+    }
+    .receipt-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        margin: 5px 0;
+    }
+    .receipt-row .lbl {
+        color: var(--muted);
+    }
+    .receipt-total {
+        display: flex;
+        justify-content: space-between;
+        font-size: 14px;
+        font-weight: 700;
+        margin-top: 10px;
+        padding-top: 8px;
+        border-top: 2px solid var(--navy);
+    }
+    .receipt-stamp {
+        text-align: center;
+        margin-top: 14px;
+        font-size: 10px;
+        color: var(--muted);
+    }
+
+    /* search bar */
+    .search-bar {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+    .search-bar input {
+        flex: 1;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: var(--muted);
+        font-size: 13px;
+    }
+    .empty-state .big {
+        font-size: 36px;
+        margin-bottom: 8px;
+    }
+
+    .section-title {
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .7px;
+        color: var(--muted);
+        margin-bottom: 12px;
+        margin-top: 4px;
+    }
+
+    .due-alert {
+        background: #fff5f5;
+        border: 1px solid #f5c6cb;
+        border-radius: 10px;
+        padding: 14px 18px;
+        margin-bottom: 16px;
+        font-size: 13px;
+        color: #842029;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .wa-btn {
+        background: #25D366;
+        color: #fff;
+    }
+    .wa-btn:hover {
+        background: #1da851;
+    }
+
+    /* tabs */
+    .tabs {
+        display: flex;
+        border-bottom: 2px solid var(--border);
+        margin-bottom: 20px;
+    }
+    .tab {
+        padding: 10px 20px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        color: var(--muted);
+        border-bottom: 3px solid transparent;
+        margin-bottom: -2px;
+    }
+    .tab.active {
+        color: var(--navy);
+        border-bottom-color: var(--gold);
+    }
+
+    .help-text {
+        font-size: 11.5px;
+        color: var(--muted);
+        margin-top: 2px;
+    }
+    .settings-tab {
+        display: none;
+    }
+    .settings-tab.active-tab {
+        display: block;
+    }
+    .tab-bar {
+        display: flex;
+        border-bottom: 2px solid var(--border);
+        margin-bottom: 22px;
+        gap: 0;
+        flex-wrap: wrap;
+    }
+    .s-tab {
+        padding: 11px 22px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        color: var(--muted);
+        border-bottom: 3px solid transparent;
+        margin-bottom: -2px;
+        transition: all .2s;
+    }
+    .s-tab:hover {
+        color: var(--navy);
+    }
+    .s-tab.active {
+        color: var(--navy);
+        border-bottom-color: var(--gold);
+        background: rgba(201, 168, 76, .06);
+    }
+
+    /* ── NEW: Session management styles ── */
+    .session-card {
+        background: #fffbf0;
+        border: 2px solid var(--gold);
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .session-card .sess-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .session-card .sess-name {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--navy);
+    }
+    .session-card .sess-meta {
+        font-size: 12px;
+        color: var(--muted);
+    }
+    .highlight-box {
+        background: #f0f7ff;
+        border: 1px solid #c0d8f0;
+        border-radius: 10px;
+        padding: 14px;
+        margin-bottom: 18px;
+        font-size: 12.5px;
+        color: #1a4a7a;
+    }
+    .warn-box {
+        background: #fff5f5;
+        border: 1px solid #f5c6cb;
+        border-radius: 10px;
+        padding: 14px;
+        margin-bottom: 18px;
+        font-size: 12.5px;
+        color: #842029;
+    }
 </style>
 </head>
 <body>
 
-<!-- SIDEBAR -->
-<div id="sidebar">
-  <div class="logo">
-    <h1>Providence<br>Tutorials</h1>
-    <p>Fee Management System</p>
-  </div>
-  <nav>
-    <div class="nav-item active" onclick="showPage('dashboard')"><span class="icon">📊</span> Dashboard</div>
-    <div class="nav-item" onclick="showPage('students')"><span class="icon">👨‍🎓</span> Students</div>
-    <div class="nav-item" onclick="showPage('fees')"><span class="icon">💰</span> Collect Fee</div>
-    <div class="nav-item" onclick="showPage('records')"><span class="icon">🗂️</span> Fee Records</div>
-    <div class="nav-item" onclick="showPage('reminders')"><span class="icon">📲</span> WhatsApp Reminders</div>
-    <div class="nav-item" onclick="showPage('receipt')"><span class="icon">🖨️</span> Print Receipt</div>
-    <div class="nav-item" onclick="showPage('backup')"><span class="icon">💾</span> Backup & Restore</div>
-    <div class="nav-item" onclick="showPage('settings')"><span class="icon">⚙️</span> Settings</div>
-  </nav>
-  <div class="sidebar-footer">© 2025 Providence Tutorials</div>
-</div>
-
-<!-- MAIN -->
-<div id="main">
-  <div class="topbar">
-    <h2 id="page-title">Dashboard</h2>
-    <div style="display:flex;align-items:center;gap:14px;">
-    <span class="topbar-date" id="today-date"></span>
-    <div style="display:flex;align-items:center;gap:8px;background:#f5f0e8;border:1px solid var(--border);border-radius:20px;padding:5px 14px 5px 10px;">
-      <span style="font-size:18px;">👤</span>
-      <span style="font-size:12px;font-weight:600;color:var(--navy);" id="topbar-user">Admin</span>
-      <span style="font-size:11px;color:var(--muted);" id="topbar-role"></span>
-    </div>
-    <button class="btn btn-outline btn-sm" onclick="doLogout()" title="Sign out" style="border-radius:20px;">🚪 Logout</button>
-  </div>
-  </div>
-  <div class="content">
-
-    <!-- DASHBOARD -->
-    <div class="page active" id="pg-dashboard">
-      <div class="cards-row">
-        <div class="stat-card blue">
-          <div class="stat-label">Total Students</div>
-          <div class="stat-value" id="d-total">0</div>
-          <div class="stat-sub">Enrolled</div>
+    <!-- SIDEBAR -->
+    <div id="sidebar">
+        <div class="logo">
+            <h1>Providence<br>Tutorials</h1>
+            <p>Fee Management System</p>
         </div>
-        <div class="stat-card green">
-          <div class="stat-label">Fee Collected</div>
-          <div class="stat-value" id="d-collected">₹0</div>
-          <div class="stat-sub">This month</div>
-        </div>
-        <div class="stat-card red">
-          <div class="stat-label">Total Due</div>
-          <div class="stat-value" id="d-due">₹0</div>
-          <div class="stat-sub">Outstanding</div>
-        </div>
-        <div class="stat-card gold">
-          <div class="stat-label">Due Students</div>
-          <div class="stat-value" id="d-due-count">0</div>
-          <div class="stat-sub">Have pending fee</div>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head"><h3>🔴 Students with Pending Dues</h3></div>
-        <div class="panel-body" style="padding:0;">
-          <table>
-            <thead><tr><th>#</th><th>Name</th><th>Class</th><th>Monthly Fee</th><th>Due Amount</th><th>WhatsApp</th></tr></thead>
-            <tbody id="due-table"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head"><h3>✅ Recent Fee Payments</h3></div>
-        <div class="panel-body" style="padding:0;">
-          <table>
-            <thead><tr><th>Receipt#</th><th>Student</th><th>Amount</th><th>Date</th><th>Month</th></tr></thead>
-            <tbody id="recent-table"></tbody>
-          </table>
-        </div>
-      </div>
+        <nav>
+            <div class="nav-item active" onclick="showPage('dashboard')"><span class="icon">📊</span> Dashboard</div>
+            <div class="nav-item" onclick="showPage('students')"><span class="icon">👨‍🎓</span> Students</div>
+            <div class="nav-item" onclick="showPage('fees')"><span class="icon">💰</span> Collect Fee</div>
+            <div class="nav-item" onclick="showPage('records')"><span class="icon">🗂️</span> Fee Records</div>
+            <div class="nav-item" onclick="showPage('reminders')"><span class="icon">📲</span> WhatsApp Reminders</div>
+            <div class="nav-item" onclick="showPage('receipt')"><span class="icon">🖨️</span> Print Receipt</div>
+            <div class="nav-item" onclick="showPage('backup')"><span class="icon">💾</span> Backup & Restore</div>
+            <div class="nav-item" onclick="showPage('sessions')"><span class="icon">📅</span> Sessions</div>
+            <div class="nav-item" onclick="showPage('settings')"><span class="icon">⚙️</span> Settings</div>
+        </nav>
+        <div class="sidebar-footer">© 2025 Providence Tutorials</div>
     </div>
 
-    <!-- STUDENTS -->
-    <div class="page" id="pg-students">
-      <div style="display:flex; gap:10px; margin-bottom:20px;">
-        <button class="btn btn-primary" onclick="openStudentGated()">+ Add Student</button>
-        <input id="student-search" placeholder="🔍 Search by name / class..." style="width:260px;" oninput="renderStudents()">
-      </div>
-      <div class="panel">
-        <div class="panel-body" style="padding:0;">
-          <table>
-            <thead><tr><th>#</th><th>Scholar No.</th><th>Name</th><th>Father's Name</th><th>Class</th><th>School</th><th>Joining Date</th><th>Monthly Fee</th><th>Deposited</th><th>Due</th><th>Actions</th></tr></thead>
-            <tbody id="student-table"></tbody>
-          </table>
+    <!-- MAIN -->
+    <div id="main">
+        <div class="topbar">
+            <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+                <h2 id="page-title">Dashboard</h2>
+                <!-- NEW: Session selector in topbar -->
+                <div class="session-selector" id="topbar-session-selector">
+                    <label>📅 Session:</label>
+                    <select id="active-session-select" onchange="switchActiveSession()">
+                        <option value="">— Select —</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+                <span class="topbar-date" id="today-date"></span>
+                <div style="display:flex;align-items:center;gap:8px;background:#f5f0e8;border:1px solid var(--border);border-radius:20px;padding:5px 14px 5px 10px;">
+                    <span style="font-size:18px;">👤</span>
+                    <span style="font-size:12px;font-weight:600;color:var(--navy);" id="topbar-user">Admin</span>
+                    <span style="font-size:11px;color:var(--muted);" id="topbar-role"></span>
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="doLogout()" title="Sign out" style="border-radius:20px;">🚪 Logout</button>
+            </div>
         </div>
-      </div>
+        <div class="content">
+
+            <!-- DASHBOARD -->
+            <div class="page active" id="pg-dashboard">
+                <div class="cards-row">
+                    <div class="stat-card blue">
+                        <div class="stat-label">Total Students</div>
+                        <div class="stat-value" id="d-total">0</div>
+                        <div class="stat-sub">Enrolled (active session)</div>
+                    </div>
+                    <div class="stat-card green">
+                        <div class="stat-label">Fee Collected</div>
+                        <div class="stat-value" id="d-collected">₹0</div>
+                        <div class="stat-sub">This month</div>
+                    </div>
+                    <div class="stat-card red">
+                        <div class="stat-label">Total Due</div>
+                        <div class="stat-value" id="d-due">₹0</div>
+                        <div class="stat-sub">Outstanding</div>
+                    </div>
+                    <div class="stat-card gold">
+                        <div class="stat-label">Due Students</div>
+                        <div class="stat-value" id="d-due-count">0</div>
+                        <div class="stat-sub">Have pending fee</div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-head"><h3>🔴 Students with Pending Dues</h3></div>
+                    <div class="panel-body" style="padding:0;">
+                        <table>
+                            <thead><tr><th>#</th><th>Name</th><th>Class</th><th>Monthly Fee</th><th>Due Amount</th><th>WhatsApp</th></tr></thead>
+                            <tbody id="due-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-head"><h3>✅ Recent Fee Payments</h3></div>
+                    <div class="panel-body" style="padding:0;">
+                        <table>
+                            <thead><tr><th>Receipt#</th><th>Student</th><th>Amount</th><th>Date</th><th>Month</th></tr></thead>
+                            <tbody id="recent-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STUDENTS -->
+            <div class="page" id="pg-students">
+                <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+                    <button class="btn btn-primary" onclick="openStudentGated()">+ Add Student</button>
+                    <input id="student-search" placeholder="🔍 Search by name / class..." style="width:260px;" oninput="renderStudents()">
+                    <span class="session-badge" id="student-session-badge">All Sessions</span>
+                </div>
+                <div class="panel">
+                    <div class="panel-body" style="padding:0;">
+                        <table>
+                            <thead><tr><th>#</th><th>Scholar No.</th><th>Name</th><th>Father's Name</th><th>Class</th><th>Session</th><th>School</th><th>Joining Date</th><th>Monthly Fee</th><th>Deposited</th><th>Due</th><th>Actions</th></tr></thead>
+                            <tbody id="student-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLLECT FEE -->
+            <div class="page" id="pg-fees">
+                <div class="panel">
+                    <div class="panel-head"><h3>💳 Record Fee Payment</h3></div>
+                    <div class="panel-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Select Student</label>
+                                <select id="fee-student" onchange="fillFeeDetails()">
+                                    <option value="">— Select Student —</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Payment Month</label>
+                                <input type="month" id="fee-month">
+                            </div>
+                            <div class="form-group">
+                                <label>Amount Paying (₹)</label>
+                                <input type="number" id="fee-amount" placeholder="e.g. 1500">
+                            </div>
+                            <div class="form-group">
+                                <label>Payment Date</label>
+                                <input type="date" id="fee-date">
+                            </div>
+                            <div class="form-group">
+                                <label>Payment Mode</label>
+                                <select id="fee-mode">
+                                    <option>Cash</option>
+                                    <option>UPI</option>
+                                    <option>Bank Transfer</option>
+                                    <option>Cheque</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Note (optional)</label>
+                                <input type="text" id="fee-note" placeholder="e.g. Advance payment">
+                            </div>
+                        </div>
+
+                        <div class="panel" style="margin-top:16px; background:#f9f6ef;">
+                            <div class="panel-body">
+                                <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:16px; text-align:center;">
+                                    <div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Monthly Fee</div><div style="font-size:20px;font-weight:700;color:var(--navy);" id="info-monthly">₹0</div></div>
+                                    <div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Total Deposited</div><div style="font-size:20px;font-weight:700;color:var(--green);" id="info-deposited">₹0</div></div>
+                                    <div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Current Due</div><div style="font-size:20px;font-weight:700;color:var(--red);" id="info-due">₹0</div></div>
+                                    <div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Advance Balance</div><div style="font-size:20px;font-weight:700;color:var(--blue);" id="info-advance">₹0</div></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top:16px; display:flex; gap:10px;">
+                            <button class="btn btn-primary" onclick="recordPayment()">✅ Record Payment</button>
+                            <button class="btn btn-gold" onclick="recordAndPrint()">🖨️ Record & Print Receipt</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FEE RECORDS -->
+            <div class="page" id="pg-records">
+                <div class="search-bar">
+                    <input id="record-search" placeholder="🔍 Search by student name…" oninput="renderRecords()">
+                    <select id="record-filter-month" onchange="renderRecords()" style="width:160px;">
+                        <option value="">All Months</option>
+                    </select>
+                    <button class="btn btn-outline" onclick="renderRecords()">Filter</button>
+                </div>
+                <div class="panel">
+                    <div class="panel-body" style="padding:0;">
+                        <table>
+                            <thead><tr><th>Receipt #</th><th>Student</th><th>Class</th><th>Month</th><th>Amount</th><th>Date</th><th>Mode</th><th>Actions</th></tr></thead>
+                            <tbody id="records-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WHATSAPP REMINDERS -->
+            <div class="page" id="pg-reminders">
+                <div class="due-alert">⚠️ Students listed below have pending fees. Click "Send Reminder" to open WhatsApp with a pre-filled message.</div>
+                <div class="panel">
+                    <div class="panel-body" style="padding:0;">
+                        <table>
+                            <thead><tr><th>Name</th><th>Class</th><th>Parent</th><th>WhatsApp No.</th><th>Monthly Fee</th><th>Due Amount</th><th>Send Reminder</th></tr></thead>
+                            <tbody id="reminder-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div style="margin-top:16px;">
+                    <button class="btn wa-btn" onclick="sendAllReminders()">📲 Send All Reminders via WhatsApp</button>
+                </div>
+            </div>
+
+            <!-- PRINT RECEIPT -->
+            <div class="page" id="pg-receipt">
+                <div class="panel">
+                    <div class="panel-head"><h3>🖨️ Generate & Print Receipt</h3></div>
+                    <div class="panel-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Select Payment Record</label>
+                                <select id="receipt-record-sel" onchange="previewReceipt()">
+                                    <option value="">— Select a Payment —</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Or select Student</label>
+                                <select id="receipt-student-sel" onchange="filterReceiptRecords()">
+                                    <option value="">— All Students —</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="margin-top:20px;" id="receipt-preview-wrap">
+                            <div class="section-title">Receipt Preview (Half A4)</div>
+                            <div id="receipt-print">
+                                <div class="receipt-paper" id="receipt-content">
+                                    <div style="text-align:center; color:var(--muted); padding:30px; font-size:13px;">Select a payment record to preview</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="margin-top:16px; display:flex; gap:10px;">
+                            <button class="btn btn-primary" onclick="window.print()">🖨️ Print Receipt</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BACKUP & RESTORE -->
+            <div class="page" id="pg-backup">
+                <div class="cards-row" style="grid-template-columns:1fr 1fr;">
+                    <div class="panel" style="margin:0;">
+                        <div class="panel-head"><h3>💾 Export Backup</h3></div>
+                        <div class="panel-body">
+                            <p style="font-size:13px;color:var(--muted);margin-bottom:18px;">Download all your student and payment data as a <strong>.json</strong> file to your device.</p>
+                            <div class="highlight-box"><strong>📌 Tip:</strong> Take a backup at least once a week.</div>
+                            <div id="backup-stats" style="font-size:13px;color:var(--muted);margin-bottom:18px;"></div>
+                            <button class="btn btn-primary" onclick="exportBackup()">⬇️ Download Backup File</button>
+                        </div>
+                    </div>
+                    <div class="panel" style="margin:0;">
+                        <div class="panel-head"><h3>📂 Restore from Backup</h3></div>
+                        <div class="panel-body">
+                            <p style="font-size:13px;color:var(--muted);margin-bottom:18px;">Select a previously exported <strong>.json</strong> backup file.</p>
+                            <div class="warn-box"><strong>⚠️ Caution:</strong> Restoring will overwrite existing data.</div>
+                            <label for="restore-file" style="text-transform:none;font-size:13px;font-weight:400;">Select backup file (.json):</label>
+                            <input type="file" id="restore-file" accept=".json" style="margin:10px 0 16px;display:block;">
+                            <button class="btn btn-red" onclick="importBackup()">📂 Restore from File</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel" style="margin-top:20px;">
+                    <div class="panel-head"><h3>🕒 Auto-Backup History (Browser)</h3></div>
+                    <div class="panel-body"><div id="auto-backup-list"></div></div>
+                </div>
+            </div>
+
+            <!-- ══════════ NEW: SESSIONS PAGE ══════════ -->
+            <div class="page" id="pg-sessions">
+                <div class="panel">
+                    <div class="panel-head">
+                        <h3>📅 Academic Sessions</h3>
+                        <button class="btn btn-primary btn-sm" onclick="showCreateSessionModal()">+ Create Session</button>
+                    </div>
+                    <div class="panel-body">
+                        <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Sessions group students by academic year. The <strong>active session</strong> is used for all fee operations.</p>
+                        <div id="sessions-list"></div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-head"><h3>🔄 Promote Students to Next Session</h3></div>
+                    <div class="panel-body">
+                        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Promote all students from the current active session to a new session. Their class will increment by 1, previous dues will be carried forward, and new scholar numbers will be assigned.</p>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Target Session</label>
+                                <select id="promote-target-session">
+                                    <option value="">— Select target session —</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>New Joining Date</label>
+                                <input type="date" id="promote-joining-date">
+                            </div>
+                        </div>
+                        <div style="margin-top:14px;">
+                            <button class="btn btn-gold" onclick="promoteStudents()">🔄 Promote All Students</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════ SETTINGS PAGE ══════════ -->
+            <div class="page" id="pg-settings">
+                <div class="tab-bar">
+                    <div class="s-tab active" onclick="openSTab('st-users',this)">👤 User Accounts</div>
+                    <div class="s-tab" onclick="openSTab('st-adduser',this)">➕ Add / Edit User</div>
+                    <div class="s-tab" id="codes-tab-btn" onclick="openSTab('st-codes',this)">🎟️ Access Codes</div>
+                    <div class="s-tab" onclick="openSTab('st-mypw',this)">🔑 My Password</div>
+                </div>
+
+                <!-- TAB: USER ACCOUNTS -->
+                <div class="settings-tab active-tab" id="st-users">
+                    <div class="panel">
+                        <div class="panel-head">
+                            <h3>👤 All User Accounts</h3>
+                            <button class="btn btn-primary btn-sm" onclick="openSTab('st-adduser',document.querySelectorAll('.s-tab')[1]);clearUserForm()">➕ Add New User</button>
+                        </div>
+                        <div class="panel-body" style="padding:0;">
+                            <table><thead><tr><th>User ID</th><th>Name</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+                                <tbody id="users-table"></tbody></table>
+                        </div>
+                    </div>
+                    <div class="panel" id="inline-reset-panel" style="display:none;border:2px solid var(--gold);">
+                        <div class="panel-head" style="background:#fffbf0;">
+                            <h3>🔑 Reset Password for: <span id="reset-for-uid" style="color:var(--gold);font-family:monospace;"></span></h3>
+                            <button class="btn btn-outline btn-sm" onclick="document.getElementById('inline-reset-panel').style.display='none'">✕ Cancel</button>
+                        </div>
+                        <div class="panel-body">
+                            <div style="background:#fff5cc;border:1px solid #e6cc00;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;color:#7a5c00;">⚠️ You are setting a new password for this user.</div>
+                            <div class="form-grid">
+                                <div class="form-group"><label>New Password*</label><input type="password" id="direct-reset-pw" placeholder="Min 6 characters"></div>
+                                <div class="form-group"><label>Confirm New Password*</label><input type="password" id="direct-reset-pw2" placeholder="Repeat password"></div>
+                            </div>
+                            <div style="margin-top:14px;"><button class="btn btn-gold" onclick="doDirectReset()">🔑 Set New Password</button></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: ADD / EDIT USER -->
+                <div class="settings-tab" id="st-adduser">
+                    <div class="panel">
+                        <div class="panel-head"><h3 id="user-form-title">➕ Add New User</h3></div>
+                        <div class="panel-body">
+                            <input type="hidden" id="edit-uid-orig">
+                            <div class="form-grid">
+                                <div class="form-group"><label>User ID *</label><input type="text" id="u-uid" placeholder="e.g. teacher1" autocomplete="off"><span class="help-text">Lowercase, no spaces.</span></div>
+                                <div class="form-group"><label>Full Name *</label><input type="text" id="u-name" placeholder="Display name"></div>
+                                <div class="form-group"><label>Password *</label><input type="password" id="u-pw" placeholder="Min 6 characters" autocomplete="new-password"><span class="help-text" id="u-pw-hint">Required for new users.</span></div>
+                                <div class="form-group"><label>Role</label><select id="u-role"><option value="admin">Admin (full access)</option><option value="staff">Staff (view & collect fee only)</option></select></div>
+                            </div>
+                            <div style="margin-top:16px;display:flex;gap:10px;">
+                                <button class="btn btn-primary" onclick="saveUser()">💾 Save User</button>
+                                <button class="btn btn-outline" onclick="clearUserForm()">🔄 Reset Form</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: ACCESS CODES -->
+                <div class="settings-tab" id="st-codes">
+                    <div class="panel">
+                        <div class="panel-head"><h3>🎟️ Student Enrollment Codes</h3><span style="font-size:12px;color:var(--muted);">Single-use · 24 hr expiry</span></div>
+                        <div class="panel-body">
+                            <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Staff must enter this code before adding a new student.</p>
+                            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+                                <button class="btn btn-primary" onclick="generateCode('enroll')">🎟️ Generate Enrollment Code</button>
+                                <div id="enroll-code-display" style="display:none;background:#f0f7ff;border:2px solid #4a8ad4;border-radius:10px;padding:10px 22px;font-family:monospace;font-size:24px;font-weight:700;color:var(--navy);letter-spacing:5px;"></div>
+                                <button id="enroll-copy-btn" style="display:none;" class="btn btn-outline btn-sm" onclick="copyCode('enroll-code-display','enroll-copy-btn')">📋 Copy</button>
+                            </div>
+                            <div class="section-title">Active Enrollment Codes</div>
+                            <div id="enroll-codes-list"><p style="font-size:13px;color:var(--muted);">No active codes yet.</p></div>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-head"><h3>🔐 Password Reset Codes</h3><span style="font-size:12px;color:var(--muted);">Single-use · 2 hr expiry</span></div>
+                        <div class="panel-body">
+                            <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Generate a reset code for users who forget their password.</p>
+                            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+                                <div class="form-group" style="margin:0;"><label>For which user?</label><select id="reset-code-user" style="min-width:200px;margin-top:4px;"></select></div>
+                                <button class="btn btn-gold" onclick="generateCode('reset')" style="margin-top:20px;">🔐 Generate Reset Code</button>
+                                <div id="reset-code-display" style="display:none;background:#fffbf0;border:2px solid var(--gold);border-radius:10px;padding:10px 22px;font-family:monospace;font-size:24px;font-weight:700;color:var(--navy);letter-spacing:5px;"></div>
+                                <button id="reset-copy-btn" style="display:none;" class="btn btn-outline btn-sm" onclick="copyCode('reset-code-display','reset-copy-btn')">📋 Copy</button>
+                            </div>
+                            <div class="section-title">Active Reset Codes</div>
+                            <div id="reset-codes-list"><p style="font-size:13px;color:var(--muted);">No active codes yet.</p></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: MY PASSWORD -->
+                <div class="settings-tab" id="st-mypw">
+                    <div class="panel">
+                        <div class="panel-head"><h3>🔑 Change My Password</h3></div>
+                        <div class="panel-body">
+                            <div class="form-grid">
+                                <div class="form-group"><label>Current Password</label><input type="password" id="cp-old" placeholder="Enter current password"></div>
+                                <div class="form-group"><label>New Password</label><input type="password" id="cp-new" placeholder="Min 6 characters"></div>
+                                <div class="form-group"><label>Confirm New Password</label><input type="password" id="cp-confirm" placeholder="Repeat new password"></div>
+                            </div>
+                            <div id="pw-change-msg" style="display:none;margin-top:10px;padding:10px 14px;border-radius:8px;font-size:13px;"></div>
+                            <div style="margin-top:14px;"><button class="btn btn-gold" onclick="changeMyPassword()">🔑 Update My Password</button></div>
+                        </div>
+                    </div>
+                </div>
+            </div><!-- /pg-settings -->
+        </div><!-- /content -->
+    </div><!-- /main -->
+
+    <!-- ACCESS CODE MODAL -->
+    <div class="modal-overlay" id="ac-modal">
+        <div class="modal" style="max-width:420px;">
+            <div class="modal-header">
+                <h3>🎟️ Enter Enrollment Code</h3>
+                <button class="modal-close" onclick="document.getElementById('ac-modal').classList.remove('open')">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:13px;color:var(--muted);margin-bottom:18px;">Adding a new student requires a one-time <strong>Enrollment Code</strong> from the admin.</p>
+                <div class="form-group">
+                    <label>Enrollment Code</label>
+                    <input type="text" id="ac-input" maxlength="8" placeholder="8-character code" style="font-family:monospace;font-size:22px;letter-spacing:5px;text-align:center;text-transform:uppercase;padding:14px;" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')" onkeydown="if(event.key==='Enter')verifyEnrollCode()">
+                </div>
+                <div id="ac-error" style="display:none;background:#fff0f0;border:1px solid #f5c6cb;border-radius:8px;padding:9px 13px;font-size:12.5px;color:#842029;margin-top:8px;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="document.getElementById('ac-modal').classList.remove('open')">Cancel</button>
+                <button class="btn btn-primary" onclick="verifyEnrollCode()">✅ Verify & Open Form</button>
+            </div>
+        </div>
     </div>
 
-    <!-- COLLECT FEE -->
-    <div class="page" id="pg-fees">
-      <div class="panel">
-        <div class="panel-head"><h3>💳 Record Fee Payment</h3></div>
-        <div class="panel-body">
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Select Student</label>
-              <select id="fee-student" onchange="fillFeeDetails()">
-                <option value="">— Select Student —</option>
-              </select>
+    <!-- STUDENT MODAL -->
+    <div class="modal-overlay" id="student-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="student-modal-title">Add New Student</h3>
+                <button class="modal-close" onclick="closeStudentModal()">✕</button>
             </div>
-            <div class="form-group">
-              <label>Payment Month</label>
-              <input type="month" id="fee-month">
+            <div class="modal-body">
+                <input type="hidden" id="edit-student-id">
+                <div class="form-grid">
+                    <div class="form-group"><label>Student Name*</label><input type="text" id="s-name" placeholder="Full name"></div>
+                    <div class="form-group"><label>Father's Name*</label><input type="text" id="s-father" placeholder="Father's name"></div>
+                    <div class="form-group"><label>Mother's Name</label><input type="text" id="s-mother" placeholder="Mother's name"></div>
+                    <div class="form-group"><label>Class*</label><select id="s-class" onchange="previewScholarNumber()"><option>Class 1</option><option>Class 2</option><option>Class 3</option><option>Class 4</option><option>Class 5</option><option>Class 6</option><option>Class 7</option><option>Class 8</option><option>Class 9</option><option>Class 10</option><option>Class 11</option><option>Class 12</option></select></div>
+                    <div class="form-group"><label>Section</label><input type="text" id="s-section" placeholder="A / B / C"></div>
+                    <div class="form-group">
+                        <label>Scholar Number</label>
+                        <input type="text" id="s-scholar" placeholder="Auto-generated" readonly style="background:#f5f5f5;color:var(--muted);font-family:monospace;font-size:14px;font-weight:700;letter-spacing:1px;">
+                        <span class="help-text">6-digit: YY + 4-digit serial. Auto-assigned on save.</span>
+                    </div>
+                    <div class="form-group"><label>Session*</label><select id="s-session"></select></div>
+                    <div class="form-group"><label>School Name</label><input type="text" id="s-school" placeholder="School name"></div>
+                    <div class="form-group full"><label>Residential Address</label><input type="text" id="s-address" placeholder="Full address"></div>
+                    <div class="form-group"><label>Father's Contact No.</label><input type="tel" id="s-father-ph" placeholder="10-digit mobile"></div>
+                    <div class="form-group"><label>Mother's Contact No.</label><input type="tel" id="s-mother-ph" placeholder="10-digit mobile"></div>
+                    <div class="form-group"><label>WhatsApp Number</label><input type="tel" id="s-wa" placeholder="WhatsApp number"></div>
+                    <div class="form-group"><label>Joining Date*</label><input type="date" id="s-joining"></div>
+                    <div class="form-group"><label>Monthly Fee (₹)*</label><input type="number" id="s-fee" placeholder="e.g. 1500"></div>
+                    <div class="form-group"><label>Previous Due (₹)</label><input type="number" id="s-prev-due" placeholder="0" value="0"><span class="help-text">Outstanding from previous session (if any)</span></div>
+                    <div class="form-group"><label>Initial Deposit (₹)</label><input type="number" id="s-deposit" placeholder="0" value="0"></div>
+                </div>
             </div>
-            <div class="form-group">
-              <label>Amount Paying (₹)</label>
-              <input type="number" id="fee-amount" placeholder="e.g. 1500">
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeStudentModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveStudent()">Save Student</button>
             </div>
-            <div class="form-group">
-              <label>Payment Date</label>
-              <input type="date" id="fee-date">
-            </div>
-            <div class="form-group">
-              <label>Payment Mode</label>
-              <select id="fee-mode">
-                <option>Cash</option>
-                <option>UPI</option>
-                <option>Bank Transfer</option>
-                <option>Cheque</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Note (optional)</label>
-              <input type="text" id="fee-note" placeholder="e.g. Advance payment">
-            </div>
-          </div>
-
-          <div class="panel" style="margin-top:16px; background:#f9f6ef;">
-            <div class="panel-body">
-              <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; text-align:center;">
-                <div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Monthly Fee</div><div style="font-size:20px;font-weight:700;color:var(--navy);" id="info-monthly">₹0</div></div>
-                <div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Total Deposited</div><div style="font-size:20px;font-weight:700;color:var(--green);" id="info-deposited">₹0</div></div>
-                <div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Outstanding Due</div><div style="font-size:20px;font-weight:700;color:var(--red);" id="info-due">₹0</div></div>
-              </div>
-            </div>
-          </div>
-
-          <div style="margin-top:16px; display:flex; gap:10px;">
-            <button class="btn btn-primary" onclick="recordPayment()">✅ Record Payment</button>
-            <button class="btn btn-gold" onclick="recordAndPrint()">🖨️ Record & Print Receipt</button>
-          </div>
         </div>
-      </div>
     </div>
 
-    <!-- FEE RECORDS -->
-    <div class="page" id="pg-records">
-      <div class="search-bar">
-        <input id="record-search" placeholder="🔍 Search by student name…" oninput="renderRecords()">
-        <select id="record-filter-month" onchange="renderRecords()" style="width:160px;">
-          <option value="">All Months</option>
-        </select>
-        <button class="btn btn-outline" onclick="renderRecords()">Filter</button>
-      </div>
-      <div class="panel">
-        <div class="panel-body" style="padding:0;">
-          <table>
-            <thead><tr><th>Receipt #</th><th>Student</th><th>Class</th><th>Month</th><th>Amount</th><th>Date</th><th>Mode</th><th>Actions</th></tr></thead>
-            <tbody id="records-table"></tbody>
-          </table>
+    <!-- NEW: CREATE SESSION MODAL -->
+    <div class="modal-overlay" id="session-modal">
+        <div class="modal" style="max-width:450px;">
+            <div class="modal-header">
+                <h3>📅 Create New Session</h3>
+                <button class="modal-close" onclick="document.getElementById('session-modal').classList.remove('open')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group"><label>Start Year*</label><input type="number" id="sess-start-year" placeholder="2025" min="2020" max="2100"></div>
+                    <div class="form-group"><label>End Year*</label><input type="number" id="sess-end-year" placeholder="2026" min="2020" max="2100"></div>
+                </div>
+                <div id="sess-error" style="display:none;background:#fff0f0;border:1px solid #f5c6cb;border-radius:8px;padding:9px 13px;font-size:12.5px;color:#842029;margin-top:10px;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="document.getElementById('session-modal').classList.remove('open')">Cancel</button>
+                <button class="btn btn-primary" onclick="createSession()">✅ Create Session</button>
+            </div>
         </div>
-      </div>
     </div>
 
-    <!-- WHATSAPP REMINDERS -->
-    <div class="page" id="pg-reminders">
-      <div class="due-alert">⚠️ Students listed below have pending fees. Click "Send Reminder" to open WhatsApp with a pre-filled message.</div>
-      <div class="panel">
-        <div class="panel-body" style="padding:0;">
-          <table>
-            <thead><tr><th>Name</th><th>Class</th><th>Parent</th><th>WhatsApp No.</th><th>Monthly Fee</th><th>Due Amount</th><th>Send Reminder</th></tr></thead>
-            <tbody id="reminder-table"></tbody>
-          </table>
-        </div>
-      </div>
-      <div style="margin-top:16px;">
-        <button class="btn wa-btn" onclick="sendAllReminders()">📲 Send All Reminders via WhatsApp</button>
-      </div>
-    </div>
-
-    <!-- PRINT RECEIPT -->
-    <div class="page" id="pg-receipt">
-      <div class="panel">
-        <div class="panel-head"><h3>🖨️ Generate & Print Receipt</h3></div>
-        <div class="panel-body">
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Select Payment Record</label>
-              <select id="receipt-record-sel" onchange="previewReceipt()">
-                <option value="">— Select a Payment —</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Or select Student</label>
-              <select id="receipt-student-sel" onchange="filterReceiptRecords()">
-                <option value="">— All Students —</option>
-              </select>
-            </div>
-          </div>
-          <div style="margin-top:20px;" id="receipt-preview-wrap">
-            <div class="section-title">Receipt Preview (Half A4)</div>
-            <div id="receipt-print">
-              <div class="receipt-paper" id="receipt-content">
-                <div style="text-align:center; color:var(--muted); padding:30px; font-size:13px;">Select a payment record to preview</div>
-              </div>
-            </div>
-          </div>
-          <div style="margin-top:16px; display:flex; gap:10px;">
-            <button class="btn btn-primary" onclick="window.print()">🖨️ Print Receipt</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- BACKUP & RESTORE -->
-    <div class="page" id="pg-backup">
-      <div class="cards-row" style="grid-template-columns:1fr 1fr;">
-        <div class="panel" style="margin:0;">
-          <div class="panel-head"><h3>💾 Export Backup</h3></div>
-          <div class="panel-body">
-            <p style="font-size:13px;color:var(--muted);margin-bottom:18px;">Download all your student and payment data as a <strong>.json</strong> file to your device. Keep this file safe — it is your complete backup.</p>
-            <div style="background:#f0f7ff;border:1px solid #c0d8f0;border-radius:10px;padding:14px;margin-bottom:18px;font-size:12.5px;color:#1a4a7a;">
-              <strong>📌 Tip:</strong> Take a backup at least once a week. Store the file in Google Drive, a USB drive, or WhatsApp "Saved Messages" for safety.
-            </div>
-            <div id="backup-stats" style="font-size:13px;color:var(--muted);margin-bottom:18px;"></div>
-            <button class="btn btn-primary" onclick="exportBackup()">⬇️ Download Backup File</button>
-          </div>
-        </div>
-        <div class="panel" style="margin:0;">
-          <div class="panel-head"><h3>📂 Restore from Backup</h3></div>
-          <div class="panel-body">
-            <p style="font-size:13px;color:var(--muted);margin-bottom:18px;">Select a previously exported <strong>.json</strong> backup file to restore all data. <span style="color:var(--red);font-weight:600;">Warning: This will replace all current data.</span></p>
-            <div style="background:#fff5f5;border:1px solid #f5c6cb;border-radius:10px;padding:14px;margin-bottom:18px;font-size:12.5px;color:#842029;">
-              <strong>⚠️ Caution:</strong> Restoring will overwrite existing students and payment records. Take a backup first before restoring.
-            </div>
-            <label for="restore-file" style="text-transform:none;font-size:13px;font-weight:400;color:var(--text);">Select backup file (.json):</label>
-            <input type="file" id="restore-file" accept=".json" style="margin:10px 0 16px;display:block;">
-            <button class="btn btn-red" onclick="importBackup()">📂 Restore from File</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="panel" style="margin-top:20px;">
-        <div class="panel-head"><h3>🕒 Auto-Backup History (Browser)</h3></div>
-        <div class="panel-body">
-          <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">The system automatically saves a snapshot every time data changes. These are stored in the browser and can be restored quickly.</p>
-          <div id="auto-backup-list"></div>
-        </div>
-      </div>
-    </div>
-
-
-    <!-- SETTINGS PAGE -->
-    <div class="page" id="pg-settings">
-
-      <!-- TAB BAR -->
-      <div class="tabs">
-        <div class="tab active" onclick="switchSettingsTab('tab-users',this)">👤 User Accounts</div>
-        <div class="tab" onclick="switchSettingsTab('tab-adduser',this)">➕ Add / Edit User</div>
-        <div class="tab" onclick="switchSettingsTab('tab-codes',this)">🎟️ Access Codes</div>
-        <div class="tab" onclick="switchSettingsTab('tab-mypw',this)">🔑 My Password</div>
-      </div>
-
-      <!-- TAB: USER ACCOUNTS -->
-      <div id="tab-users" class="settings-tab">
-        <div class="panel">
-          <div class="panel-head">
-            <h3>👤 All User Accounts</h3>
-            <button class="btn btn-primary btn-sm" onclick="switchSettingsTab('tab-adduser', document.querySelectorAll('.tab')[1])">➕ Add New User</button>
-          </div>
-          <div class="panel-body" style="padding:0;">
-            <table>
-              <thead><tr><th>User ID</th><th>Name</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
-              <tbody id="users-table"></tbody>
-            </table>
-          </div>
-        </div>
-        <!-- Inline Reset PW panel (shown when Reset PW clicked) -->
-        <div class="panel" id="inline-reset-panel" style="display:none; border:2px solid var(--gold);">
-          <div class="panel-head" style="background:#fffbf0;">
-            <h3>🔑 Reset Password — <span id="reset-for-uid" style="color:var(--gold);"></span></h3>
-            <button class="btn btn-outline btn-sm" onclick="hideResetPanel()">✕ Cancel</button>
-          </div>
-          <div class="panel-body">
-            <div style="background:#fff5cc;border:1px solid #e6cc00;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;">
-              ⚠️ Admin is setting a new password directly. No access code needed for admin.
-            </div>
-            <div class="form-grid">
-              <div class="form-group">
-                <label>New Password*</label>
-                <input type="password" id="direct-reset-pw" placeholder="Min 6 characters">
-              </div>
-              <div class="form-group">
-                <label>Confirm New Password*</label>
-                <input type="password" id="direct-reset-pw2" placeholder="Repeat password">
-              </div>
-            </div>
-            <div style="margin-top:14px;">
-              <button class="btn btn-gold" onclick="doDirectReset()">🔑 Set New Password</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB: ADD / EDIT USER -->
-      <div id="tab-adduser" class="settings-tab" style="display:none;">
-        <div class="panel">
-          <div class="panel-head"><h3 id="user-form-title">➕ Add New User</h3></div>
-          <div class="panel-body">
-            <input type="hidden" id="edit-uid-orig">
-            <div class="form-grid">
-              <div class="form-group">
-                <label>User ID*</label>
-                <input type="text" id="u-uid" placeholder="e.g. teacher1" autocomplete="off">
-                <span class="help-text">Lowercase letters/numbers only. Cannot be changed later.</span>
-              </div>
-              <div class="form-group">
-                <label>Full Name*</label>
-                <input type="text" id="u-name" placeholder="Display name">
-              </div>
-              <div class="form-group">
-                <label>Password*</label>
-                <input type="password" id="u-pw" placeholder="Min 6 characters" autocomplete="new-password">
-                <span class="help-text" id="u-pw-hint">Required for new users.</span>
-              </div>
-              <div class="form-group">
-                <label>Role</label>
-                <select id="u-role">
-                  <option value="admin">Admin (full access)</option>
-                  <option value="staff">Staff (view &amp; collect fee only)</option>
-                </select>
-              </div>
-            </div>
-            <div style="margin-top:16px;display:flex;gap:10px;">
-              <button class="btn btn-primary" onclick="saveUser()">💾 Save User</button>
-              <button class="btn btn-outline" onclick="clearUserForm()">🔄 Clear Form</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB: ACCESS CODES -->
-      <div id="tab-codes" class="settings-tab" style="display:none;">
-
-        <!-- Generate code for Add Student -->
-        <div class="panel">
-          <div class="panel-head">
-            <h3>🎟️ Add-Student Access Codes</h3>
-            <span style="font-size:12px;color:var(--muted);">Admin only · Single-use · 24 hr expiry</span>
-          </div>
-          <div class="panel-body">
-            <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">
-              Staff need this code to add a new student. Generate a code, share it via WhatsApp/message. It works <strong>once</strong> and expires in <strong>24 hours</strong>.
-            </p>
-            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
-              <button class="btn btn-primary" onclick="generateCode('enroll')">🎟️ Generate Enrollment Code</button>
-              <div id="enroll-code-display" style="display:none;background:#f0f7ff;border:2px solid #c0d8f0;border-radius:10px;padding:10px 22px;font-family:monospace;font-size:24px;font-weight:700;color:var(--navy);letter-spacing:5px;"></div>
-              <button id="enroll-copy-btn" style="display:none;" class="btn btn-outline btn-sm" onclick="copyCodeDisplay('enroll-code-display','enroll-copy-btn')">📋 Copy</button>
-            </div>
-            <div class="section-title">Active Enrollment Codes</div>
-            <div id="enroll-codes-list"></div>
-          </div>
-        </div>
-
-        <!-- Generate code for Password Reset -->
-        <div class="panel">
-          <div class="panel-head">
-            <h3>🔐 Password-Reset Access Codes</h3>
-            <span style="font-size:12px;color:var(--muted);">Admin only · Single-use · 2 hr expiry</span>
-          </div>
-          <div class="panel-body">
-            <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">
-              When a user forgets their password, generate a reset code and share it. The user enters this code on the login page instead of their password to set a new one. Works <strong>once</strong>, expires in <strong>2 hours</strong>.
-            </p>
-            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
-              <div class="form-group" style="margin:0;">
-                <label>For which user?</label>
-                <select id="reset-code-user" style="min-width:180px;"></select>
-              </div>
-              <button class="btn btn-gold" onclick="generateCode('reset')" style="margin-top:18px;">🔐 Generate Reset Code</button>
-              <div id="reset-code-display" style="display:none;background:#fffbf0;border:2px solid var(--gold);border-radius:10px;padding:10px 22px;font-family:monospace;font-size:24px;font-weight:700;color:var(--navy);letter-spacing:5px;"></div>
-              <button id="reset-copy-btn" style="display:none;" class="btn btn-outline btn-sm" onclick="copyCodeDisplay('reset-code-display','reset-copy-btn')">📋 Copy</button>
-            </div>
-            <div class="section-title">Active Reset Codes</div>
-            <div id="reset-codes-list"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB: MY PASSWORD -->
-      <div id="tab-mypw" class="settings-tab" style="display:none;">
-        <div class="panel">
-          <div class="panel-head"><h3>🔑 Change My Password</h3></div>
-          <div class="panel-body">
-            <div class="form-grid">
-              <div class="form-group">
-                <label>Current Password</label>
-                <input type="password" id="cp-old" placeholder="Current password">
-              </div>
-              <div class="form-group">
-                <label>New Password</label>
-                <input type="password" id="cp-new" placeholder="Min 6 characters">
-              </div>
-              <div class="form-group">
-                <label>Confirm New Password</label>
-                <input type="password" id="cp-confirm" placeholder="Repeat new password">
-              </div>
-            </div>
-            <div style="margin-top:14px;">
-              <button class="btn btn-gold" onclick="changeMyPassword()">🔑 Update Password</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div><!-- /pg-settings -->
-  </div><!-- /content -->
-</div><!-- /main -->
-
-
-<!-- ACCESS CODE MODAL (for non-admin adding student) -->
-<div class="modal-overlay" id="access-code-modal">
-  <div class="modal" style="max-width:420px;">
-    <div class="modal-header">
-      <h3>🎟️ Enter Enrollment Access Code</h3>
-      <button class="modal-close" onclick="document.getElementById('access-code-modal').classList.remove('open')">✕</button>
-    </div>
-    <div class="modal-body">
-      <p style="font-size:13px;color:var(--muted);margin-bottom:18px;">
-        Adding a new student requires a one-time <strong>access code</strong> from the admin.
-      </p>
-      <div class="form-group">
-        <label>Access Code</label>
-        <input type="text" id="ac-input" maxlength="8"
-          placeholder="Enter 8-character code"
-          style="font-family:monospace;font-size:20px;letter-spacing:4px;text-align:center;text-transform:uppercase;"
-          oninput="this.value=this.value.toUpperCase()"
-          onkeydown="if(event.key==='Enter')verifyEnrollCode()">
-      </div>
-      <div id="ac-error" style="display:none;color:var(--red);font-size:12.5px;margin-top:8px;padding:8px 12px;background:#fff0f0;border-radius:6px;"></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="document.getElementById('access-code-modal').classList.remove('open')">Cancel</button>
-      <button class="btn btn-primary" onclick="verifyEnrollCode()">✅ Verify & Continue</button>
-    </div>
-  </div>
-</div>
-
-<!-- PASSWORD RESET VIA ACCESS CODE MODAL (on login page this is handled separately; here for in-app use) -->
-<!-- STUDENT MODAL -->
-<div class="modal-overlay" id="student-modal">
-  <div class="modal">
-    <div class="modal-header">
-      <h3 id="student-modal-title">Add New Student</h3>
-      <button class="modal-close" onclick="closeStudentModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <input type="hidden" id="edit-student-id">
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Student Name*</label>
-          <input type="text" id="s-name" placeholder="Full name">
-        </div>
-        <div class="form-group">
-          <label>Father's Name*</label>
-          <input type="text" id="s-father" placeholder="Father's name">
-        </div>
-        <div class="form-group">
-          <label>Mother's Name</label>
-          <input type="text" id="s-mother" placeholder="Mother's name">
-        </div>
-        <div class="form-group">
-          <label>Class*</label>
-          <select id="s-class" onchange="previewScholarNumber()">
-            <option>Class 1</option><option>Class 2</option><option>Class 3</option>
-            <option>Class 4</option><option>Class 5</option><option>Class 6</option>
-            <option>Class 7</option><option>Class 8</option><option>Class 9</option>
-            <option>Class 10</option><option>Class 11</option><option>Class 12</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Section</label>
-          <input type="text" id="s-section" placeholder="A / B / C">
-        </div>
-        <div class="form-group">
-          <label>Scholar Number</label>
-          <input type="text" id="s-scholar" placeholder="Auto-generated" readonly style="background:#f5f5f5;color:var(--muted);font-family:monospace;font-size:14px;font-weight:700;letter-spacing:1px;">
-          <span class="help-text">First digit(s) = class number. Last digits = unique serial. Auto-assigned on save.</span>
-        </div>
-        <div class="form-group">
-          <label>School Name</label>
-          <input type="text" id="s-school" placeholder="School name">
-        </div>
-        <div class="form-group full">
-          <label>Residential Address</label>
-          <input type="text" id="s-address" placeholder="Full address">
-        </div>
-        <div class="form-group">
-          <label>Father's Contact No.</label>
-          <input type="tel" id="s-father-ph" placeholder="10-digit mobile">
-        </div>
-        <div class="form-group">
-          <label>Mother's Contact No.</label>
-          <input type="tel" id="s-mother-ph" placeholder="10-digit mobile">
-        </div>
-        <div class="form-group">
-          <label>WhatsApp Number</label>
-          <input type="tel" id="s-wa" placeholder="WhatsApp number">
-        </div>
-        <div class="form-group">
-          <label>Joining Date*</label>
-          <input type="date" id="s-joining">
-        </div>
-        <div class="form-group">
-          <label>Monthly Fee (₹)*</label>
-          <input type="number" id="s-fee" placeholder="e.g. 1500">
-        </div>
-        <div class="form-group">
-          <label>Initial Deposit (₹)</label>
-          <input type="number" id="s-deposit" placeholder="0" value="0">
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeStudentModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveStudent()">Save Student</button>
-    </div>
-  </div>
-</div>
-
-<script>
-// ─── DATA LAYER ───────────────────────────────────────────────────────────────
-let students = JSON.parse(localStorage.getItem('pt_students') || '[]');
-let payments = JSON.parse(localStorage.getItem('pt_payments') || '[]');
-let nextStudentId = parseInt(localStorage.getItem('pt_sid') || '1');
-let nextReceiptId = parseInt(localStorage.getItem('pt_rid') || '1001');
-
-function save() {
-  localStorage.setItem('pt_students', JSON.stringify(students));
-  localStorage.setItem('pt_payments', JSON.stringify(payments));
-  localStorage.setItem('pt_sid', nextStudentId);
-  localStorage.setItem('pt_rid', nextReceiptId);
-  saveAutoBackup();
-}
-
-// ─── SCHOLAR NUMBER ───────────────────────────────────────────────────────────
-function classPrefix(cls) {
-  // Extract numeric part from "Class 10" → "10", "Class 1" → "1"
-  const n = cls.replace(/\D/g,'');
-  return n; // 1-2 digits
-}
-
-function generateScholarNumber(cls) {
-  const prefix = classPrefix(cls); // e.g. "10" or "1"
-  // Find highest serial for this class prefix
-  const existing = students
-    .filter(s => s.scholarNo && String(s.scholarNo).startsWith(prefix))
-    .map(s => parseInt(String(s.scholarNo).slice(prefix.length)) || 0);
-  const serial = existing.length ? Math.max(...existing) + 1 : 1;
-  // Total must be 5 digits: prefix + zero-padded serial
-  const serialLen = 5 - prefix.length;
-  return prefix + String(serial).padStart(serialLen, '0');
-}
-
-function previewScholarNumber() {
-  const cls = document.getElementById('s-class').value;
-  const editId = document.getElementById('edit-student-id').value;
-  if (editId) return; // don't overwrite on edit
-  document.getElementById('s-scholar').value = generateScholarNumber(cls) + ' (preview)';
-}
-
-// ─── NAVIGATION ───────────────────────────────────────────────────────────────
-const pageTitles = {
-  dashboard:'Dashboard', students:'Students', fees:'Collect Fee',
-  records:'Fee Records', reminders:'WhatsApp Reminders', receipt:'Print Receipt',
-  backup:'Backup & Restore', settings:'Settings & User Management'
-};
-
-function showPage(id) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('pg-'+id).classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(n => {
-    if (n.getAttribute('onclick') === `showPage('${id}')`) n.classList.add('active');
-  });
-  document.getElementById('page-title').textContent = pageTitles[id];
-
-  if (id==='dashboard') // Set topbar user info (already handled by auth guard DOMContentLoaded)
-renderDashboard();
-  if (id==='students') renderStudents();
-  if (id==='fees') populateFeeDropdowns();
-  if (id==='records') { populateMonthFilter(); renderRecords(); }
-  if (id==='reminders') renderReminders();
-  if (id==='receipt') populateReceiptDropdowns();
-  if (id==='backup') renderBackupPage();
-  if (id==='settings') renderUsersTable();
-}
-
-// ─── DATE ─────────────────────────────────────────────────────────────────────
-document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-document.getElementById('fee-date').value = new Date().toISOString().split('T')[0];
-const m = new Date(); document.getElementById('fee-month').value = m.getFullYear()+'-'+(String(m.getMonth()+1).padStart(2,'0'));
-
-// ─── STUDENT HELPERS ──────────────────────────────────────────────────────────
-function getDeposited(id) { return payments.filter(p=>p.studentId===id).reduce((s,p)=>s+p.amount,0); }
-function getDue(id) {
-  const s = students.find(x=>x.id===id); if(!s) return 0;
-  const months = Math.max(1, monthsDiff(s.joining, new Date()));
-  return Math.max(0, (s.monthlyFee * months) - getDeposited(id));
-}
-function monthsDiff(from, to) {
-  const d1 = new Date(from), d2 = new Date(to);
-  return (d2.getFullYear()-d1.getFullYear())*12 + (d2.getMonth()-d1.getMonth()) + 1;
-}
-
-// ─── DASHBOARD ────────────────────────────────────────────────────────────────
-function renderDashboard() {
-  document.getElementById('d-total').textContent = students.length;
-  const now = new Date(); const ym = now.getFullYear()+'-'+(String(now.getMonth()+1).padStart(2,'0'));
-  const monthlyCol = payments.filter(p=>p.date.startsWith(ym)).reduce((s,p)=>s+p.amount,0);
-  document.getElementById('d-collected').textContent = '₹'+monthlyCol.toLocaleString('en-IN');
-  const totalDue = students.reduce((s,st)=>s+getDue(st.id),0);
-  document.getElementById('d-due').textContent = '₹'+totalDue.toLocaleString('en-IN');
-  const dueCount = students.filter(s=>getDue(s.id)>0).length;
-  document.getElementById('d-due-count').textContent = dueCount;
-
-  const dtb = document.getElementById('due-table');
-  const dueStudents = students.filter(s=>getDue(s.id)>0);
-  if(!dueStudents.length) { dtb.innerHTML='<tr><td colspan="6" class="empty-state">No pending dues 🎉</td></tr>'; }
-  else {
-    dtb.innerHTML = dueStudents.map((s,i)=>`<tr>
-      <td>${i+1}</td><td><strong>${s.name}</strong></td><td>${s.class}</td>
-      <td>₹${s.monthlyFee.toLocaleString('en-IN')}</td>
-      <td><span class="badge badge-red">₹${getDue(s.id).toLocaleString('en-IN')}</span></td>
-      <td><button class="btn wa-btn btn-sm" onclick="sendWA('${s.id}')">📲 WhatsApp</button></td>
-    </tr>`).join('');
-  }
-
-  const rtb = document.getElementById('recent-table');
-  const recent = [...payments].reverse().slice(0,10);
-  if(!recent.length) { rtb.innerHTML='<tr><td colspan="5" class="empty-state">No payments yet</td></tr>'; }
-  else {
-    rtb.innerHTML = recent.map(p=>{
-      const s = students.find(x=>x.id===p.studentId);
-      return `<tr><td><span class="badge badge-blue">#${p.receiptId}</span></td>
-        <td>${s?s.name:'—'}</td><td>₹${p.amount.toLocaleString('en-IN')}</td>
-        <td>${p.date}</td><td>${p.month}</td></tr>`;
-    }).join('');
-  }
-}
-
-// ─── STUDENTS ─────────────────────────────────────────────────────────────────
-function renderStudents() {
-  const q = (document.getElementById('student-search').value||'').toLowerCase();
-  const filtered = students.filter(s=> s.name.toLowerCase().includes(q)||s.class.toLowerCase().includes(q));
-  const tb = document.getElementById('student-table');
-  if(!filtered.length) { tb.innerHTML='<tr><td colspan="10" class="empty-state"><div class="big">👨‍🎓</div>No students found</td></tr>'; return; }
-  tb.innerHTML = filtered.map((s,i)=>`<tr>
-    <td>${i+1}</td>
-    <td><span class="badge badge-blue" style="font-family:monospace;letter-spacing:1px;">${s.scholarNo||'—'}</span></td>
-    <td><strong>${s.name}</strong></td>
-    <td>${s.father}</td>
-    <td>${s.class}${s.section?' - '+s.section:''}</td>
-    <td>${s.school||'—'}</td>
-    <td>${s.joining}</td>
-    <td>₹${s.monthlyFee.toLocaleString('en-IN')}</td>
-    <td style="color:var(--green)">₹${getDeposited(s.id).toLocaleString('en-IN')}</td>
-    <td>${getDue(s.id)>0?`<span class="badge badge-red">₹${getDue(s.id).toLocaleString('en-IN')}</span>`:`<span class="badge badge-green">NIL</span>`}</td>
-    <td>
-      <button class="btn btn-outline btn-sm" onclick="editStudent('${s.id}')">✏️</button>
-      <button class="btn btn-red btn-sm" onclick="deleteStudent('${s.id}')">🗑️</button>
-    </td>
-  </tr>`).join('');
-}
-
-function openStudentModal(id) {
-  document.getElementById('student-modal-title').textContent = id ? 'Edit Student' : 'Add New Student';
-  document.getElementById('edit-student-id').value = id||'';
-  if(id) {
-    const s = students.find(x=>x.id===id);
-    document.getElementById('s-name').value=s.name;
-    document.getElementById('s-father').value=s.father;
-    document.getElementById('s-mother').value=s.mother||'';
-    document.getElementById('s-class').value=s.class;
-    document.getElementById('s-section').value=s.section||'';
-    document.getElementById('s-scholar').value=s.scholarNo||'—';
-    document.getElementById('s-school').value=s.school||'';
-    document.getElementById('s-address').value=s.address||'';
-    document.getElementById('s-father-ph').value=s.fatherPh||'';
-    document.getElementById('s-mother-ph').value=s.motherPh||'';
-    document.getElementById('s-wa').value=s.wa||'';
-    document.getElementById('s-joining').value=s.joining;
-    document.getElementById('s-fee').value=s.monthlyFee;
-    document.getElementById('s-deposit').value=s.initDeposit||0;
-  } else {
-    ['s-name','s-father','s-mother','s-section','s-school','s-address','s-father-ph','s-mother-ph','s-wa'].forEach(f=>document.getElementById(f).value='');
-    document.getElementById('s-joining').value=new Date().toISOString().split('T')[0];
-    document.getElementById('s-fee').value='';
-    document.getElementById('s-deposit').value='0';
-    document.getElementById('s-class').value='Class 1';
-    previewScholarNumber();
-  }
-  document.getElementById('student-modal').classList.add('open');
-}
-function editStudent(id){ openStudentModal(id); }
-function closeStudentModal(){ document.getElementById('student-modal').classList.remove('open'); }
-
-function saveStudent() {
-  const name=document.getElementById('s-name').value.trim();
-  const father=document.getElementById('s-father').value.trim();
-  const fee=parseFloat(document.getElementById('s-fee').value)||0;
-  const joining=document.getElementById('s-joining').value;
-  if(!name||!father||!fee||!joining){ alert('Please fill Name, Father\'s Name, Monthly Fee and Joining Date.'); return; }
-
-  const editId = document.getElementById('edit-student-id').value;
-  const cls = document.getElementById('s-class').value;
-  const obj = {
-    id: editId || 's'+nextStudentId,
-    scholarNo: editId ? (students.find(x=>x.id===editId)||{}).scholarNo : generateScholarNumber(cls),
-    name, father,
-    mother: document.getElementById('s-mother').value.trim(),
-    class: cls,
-    section: document.getElementById('s-section').value.trim(),
-    school: document.getElementById('s-school').value.trim(),
-    address: document.getElementById('s-address').value.trim(),
-    fatherPh: document.getElementById('s-father-ph').value.trim(),
-    motherPh: document.getElementById('s-mother-ph').value.trim(),
-    wa: document.getElementById('s-wa').value.trim(),
-    joining, monthlyFee: fee,
-    initDeposit: parseFloat(document.getElementById('s-deposit').value)||0
-  };
-
-  if(editId) {
-    const idx = students.findIndex(x=>x.id===editId);
-    students[idx] = obj;
-  } else {
-    students.push(obj);
-    nextStudentId++;
-    // record initial deposit as payment
-    if(obj.initDeposit>0) {
-      payments.push({ receiptId:nextReceiptId++, studentId:obj.id, amount:obj.initDeposit, date:joining, month:'Admission', mode:'Cash', note:'Initial deposit' });
-    }
-  }
-  save(); closeStudentModal(); renderStudents();
-}
-
-function deleteStudent(id) {
-  if(!confirm('Delete this student? All payment records will also be removed.')) return;
-  students = students.filter(s=>s.id!==id);
-  payments = payments.filter(p=>p.studentId!==id);
-  save(); renderStudents();
-}
-
-// ─── FEE COLLECTION ───────────────────────────────────────────────────────────
-function populateFeeDropdowns() {
-  const sel = document.getElementById('fee-student');
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">— Select Student —</option>' + students.map(s=>`<option value="${s.id}">${s.name} (${s.class})</option>`).join('');
-  sel.value = cur;
-  fillFeeDetails();
-}
-
-function fillFeeDetails() {
-  const id = document.getElementById('fee-student').value;
-  const s = students.find(x=>x.id===id);
-  if(!s) { document.getElementById('info-monthly').textContent='₹0'; document.getElementById('info-deposited').textContent='₹0'; document.getElementById('info-due').textContent='₹0'; document.getElementById('fee-amount').value=''; return; }
-  document.getElementById('info-monthly').textContent='₹'+s.monthlyFee.toLocaleString('en-IN');
-  document.getElementById('info-deposited').textContent='₹'+getDeposited(s.id).toLocaleString('en-IN');
-  const due = getDue(s.id);
-  document.getElementById('info-due').textContent='₹'+(due>0?due:0).toLocaleString('en-IN');
-  if(!document.getElementById('fee-amount').value) document.getElementById('fee-amount').value=s.monthlyFee;
-}
-
-function doRecordPayment() {
-  const sid = document.getElementById('fee-student').value;
-  const amount = parseFloat(document.getElementById('fee-amount').value)||0;
-  const date = document.getElementById('fee-date').value;
-  const month = document.getElementById('fee-month').value;
-  const mode = document.getElementById('fee-mode').value;
-  const note = document.getElementById('fee-note').value;
-  if(!sid||!amount||!date||!month) { alert('Please fill all required fields.'); return null; }
-  const pay = { receiptId:nextReceiptId++, studentId:sid, amount, date, month, mode, note };
-  payments.push(pay);
-  save();
-  fillFeeDetails();
-  return pay;
-}
-
-function recordPayment() {
-  const p = doRecordPayment();
-  if(p) { alert('✅ Payment recorded successfully! Receipt #'+p.receiptId); document.getElementById('fee-amount').value=''; }
-}
-
-function recordAndPrint() {
-  const p = doRecordPayment();
-  if(!p) return;
-  showPage('receipt');
-  // populate and select latest
-  populateReceiptDropdowns();
-  setTimeout(()=>{
-    document.getElementById('receipt-record-sel').value = p.receiptId;
-    previewReceipt();
-    setTimeout(()=>window.print(),400);
-  },200);
-}
-
-// ─── FEE RECORDS ──────────────────────────────────────────────────────────────
-function populateMonthFilter() {
-  const sel = document.getElementById('record-filter-month');
-  const months = [...new Set(payments.map(p=>p.month))].sort().reverse();
-  sel.innerHTML='<option value="">All Months</option>'+months.map(m=>`<option>${m}</option>`).join('');
-}
-
-function renderRecords() {
-  const q=(document.getElementById('record-search').value||'').toLowerCase();
-  const mf=document.getElementById('record-filter-month').value;
-  let recs = payments.filter(p=>{
-    const s=students.find(x=>x.id===p.studentId);
-    const nm=(s?s.name:'').toLowerCase();
-    return nm.includes(q) && (!mf||p.month===mf);
-  }).reverse();
-
-  const tb=document.getElementById('records-table');
-  if(!recs.length){tb.innerHTML='<tr><td colspan="8" class="empty-state">No records found</td></tr>';return;}
-  tb.innerHTML=recs.map(p=>{
-    const s=students.find(x=>x.id===p.studentId);
-    return `<tr>
-      <td><span class="badge badge-blue">#${p.receiptId}</span></td>
-      <td>${s?s.name:'—'}</td>
-      <td>${s?s.class:'—'}</td>
-      <td>${p.month}</td>
-      <td style="font-weight:600;">₹${p.amount.toLocaleString('en-IN')}</td>
-      <td>${p.date}</td>
-      <td><span class="badge badge-green">${p.mode}</span></td>
-      <td>
-        <button class="btn btn-outline btn-sm" onclick="viewReceiptById(${p.receiptId})">🖨️ Receipt</button>
-        <button class="btn btn-red btn-sm" onclick="deletePayment(${p.receiptId})">🗑️</button>
-      </td>
-    </tr>`;
-  }).join('');
-}
-
-function deletePayment(rid){
-  if(!confirm('Delete this payment record?')) return;
-  payments=payments.filter(p=>p.receiptId!==rid);
-  save(); renderRecords();
-}
-
-function viewReceiptById(rid){
-  showPage('receipt');
-  populateReceiptDropdowns();
-  setTimeout(()=>{
-    document.getElementById('receipt-record-sel').value=rid;
-    previewReceipt();
-  },100);
-}
-
-// ─── WHATSAPP REMINDERS ───────────────────────────────────────────────────────
-function renderReminders() {
-  const due = students.filter(s=>getDue(s.id)>0);
-  const tb = document.getElementById('reminder-table');
-  if(!due.length){tb.innerHTML='<tr><td colspan="7" class="empty-state">🎉 No pending dues!</td></tr>';return;}
-  tb.innerHTML=due.map(s=>`<tr>
-    <td><strong>${s.name}</strong></td>
-    <td>${s.class}</td>
-    <td>${s.father}</td>
-    <td>${s.wa||s.fatherPh||'—'}</td>
-    <td>₹${s.monthlyFee.toLocaleString('en-IN')}</td>
-    <td><span class="badge badge-red">₹${getDue(s.id).toLocaleString('en-IN')}</span></td>
-    <td><button class="btn wa-btn btn-sm" onclick="sendWA('${s.id}')">📲 Send</button></td>
-  </tr>`).join('');
-}
-
-function buildWAMsg(sid){
-  const s = students.find(x=>x.id===sid);
-  if(!s) return '';
-  const due = getDue(s.id);
-  return `Dear Parent of *${s.name}* (${s.class}),\n\nThis is a friendly reminder from *Providence Tutorials* that a fee of *₹${due.toLocaleString('en-IN')}* is pending for your ward.\n\nKindly deposit the fee as soon as possible to avoid any inconvenience.\n\nThank you 🙏\n— Providence Tutorials`;
-}
-
-function sendWA(sid){
-  const s = students.find(x=>x.id===sid);
-  if(!s){alert('Student not found.');return;}
-  const num = (s.wa||s.fatherPh||'').replace(/\D/g,'');
-  if(!num){alert('No WhatsApp number found for this student. Please update the student record.');return;}
-  const msg = buildWAMsg(sid);
-  const url = `https://wa.me/91${num}?text=${encodeURIComponent(msg)}`;
-  window.open(url,'_blank');
-}
-
-function sendAllReminders(){
-  const due = students.filter(s=>getDue(s.id)>0);
-  if(!due.length){alert('No pending dues!');return;}
-  if(!confirm(`Send WhatsApp reminders to ${due.length} students?`)) return;
-  due.forEach((s,i)=>{ setTimeout(()=>sendWA(s.id), i*600); });
-}
-
-// ─── RECEIPT ──────────────────────────────────────────────────────────────────
-function populateReceiptDropdowns(){
-  const ssel=document.getElementById('receipt-student-sel');
-  ssel.innerHTML='<option value="">— All Students —</option>'+students.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
-
-  filterReceiptRecords();
-}
-
-function filterReceiptRecords(){
-  const sid=document.getElementById('receipt-student-sel').value;
-  const recs = payments.filter(p=>!sid||p.studentId===sid).reverse();
-  const sel=document.getElementById('receipt-record-sel');
-  sel.innerHTML='<option value="">— Select a Payment —</option>'+recs.map(p=>{
-    const s=students.find(x=>x.id===p.studentId);
-    return `<option value="${p.receiptId}">#${p.receiptId} — ${s?s.name:''} — ₹${p.amount} — ${p.date}</option>`;
-  }).join('');
-}
-
-function previewReceipt(){
-  const rid=parseInt(document.getElementById('receipt-record-sel').value);
-  const p=payments.find(x=>x.receiptId===rid);
-  const cont=document.getElementById('receipt-content');
-  if(!p){cont.innerHTML='<div style="text-align:center;color:var(--muted);padding:30px;">Select a payment to preview</div>';return;}
-  const s=students.find(x=>x.id===p.studentId);
-  const balance=Math.max(0,getDue(s.id));
-  cont.innerHTML=`
-    <div class="receipt-header">
-      <h2>Providence Tutorials</h2>
-      <p>Fee Payment Receipt</p>
-      <p style="font-size:9px;color:#aaa;">Agar Malwa, Madhya Pradesh</p>
-    </div>
-    <hr class="receipt-divider">
-    <div class="receipt-row"><span class="lbl">Receipt No.</span><span><strong>#${p.receiptId}</strong></span></div>
-    <div class="receipt-row"><span class="lbl">Date</span><span>${p.date}</span></div>
-    <hr class="receipt-divider">
-    <div class="receipt-row"><span class="lbl">Student Name</span><span><strong>${s.name}</strong></span></div>
-    <div class="receipt-row"><span class="lbl">Scholar No.</span><span style="font-family:monospace;font-weight:700;">${s.scholarNo||'—'}</span></div>
-    <div class="receipt-row"><span class="lbl">Father's Name</span><span>${s.father}</span></div>
-    <div class="receipt-row"><span class="lbl">Class</span><span>${s.class}${s.section?' – '+s.section:''}</span></div>
-    <div class="receipt-row"><span class="lbl">School</span><span>${s.school||'—'}</span></div>
-    <hr class="receipt-divider">
-    <div class="receipt-row"><span class="lbl">Month</span><span>${p.month}</span></div>
-    <div class="receipt-row"><span class="lbl">Payment Mode</span><span>${p.mode}</span></div>
-    ${p.note?`<div class="receipt-row"><span class="lbl">Note</span><span>${p.note}</span></div>`:''}
-    <div class="receipt-total"><span>Amount Paid</span><span>₹${p.amount.toLocaleString('en-IN')}</span></div>
-    ${balance>0?`<div class="receipt-row" style="color:var(--red);font-weight:600;margin-top:6px;"><span>Balance Due</span><span>₹${balance.toLocaleString('en-IN')}</span></div>`:'<div style="text-align:center;color:var(--green);font-size:11px;margin-top:8px;font-weight:600;">✅ No pending dues</div>'}
-    <div class="receipt-stamp">
-      <hr style="border:none;border-top:1px dashed #ccc;margin:10px 0;">
-      <span>This is a computer-generated receipt</span><br>
-      <span style="font-size:9px;">Providence Tutorials — Thank you! 🙏</span>
-    </div>
-  `;
-}
-
-// ─── BACKUP & RESTORE ─────────────────────────────────────────────────────────
-const MAX_AUTO_BACKUPS = 10;
-
-function saveAutoBackup() {
-  const backups = JSON.parse(localStorage.getItem('pt_auto_backups') || '[]');
-  const snapshot = {
-    ts: new Date().toISOString(),
-    students: JSON.parse(JSON.stringify(students)),
-    payments: JSON.parse(JSON.stringify(payments)),
-    nextStudentId, nextReceiptId
-  };
-  backups.unshift(snapshot);
-  if (backups.length > MAX_AUTO_BACKUPS) backups.length = MAX_AUTO_BACKUPS;
-  localStorage.setItem('pt_auto_backups', JSON.stringify(backups));
-}
-
-function exportBackup() {
-  const data = {
-    version: 1,
-    exportedAt: new Date().toISOString(),
-    institute: 'Providence Tutorials',
-    students, payments, nextStudentId, nextReceiptId
-  };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  const dateStr = new Date().toISOString().slice(0,10);
-  a.download = `providence_backup_${dateStr}.json`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-  alert(`✅ Backup downloaded!\nFile: providence_backup_${dateStr}.json\n\nStore it safely on your device or Google Drive.`);
-}
-
-function importBackup() {
-  const file = document.getElementById('restore-file').files[0];
-  if (!file) { alert('Please select a backup .json file first.'); return; }
-  if (!confirm('⚠️ WARNING: This will replace ALL current data with the backup.\n\nAre you absolutely sure?')) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const data = JSON.parse(e.target.result);
-      if (!data.students || !data.payments) throw new Error('Invalid backup file format.');
-      students = data.students;
-      payments = data.payments;
-      nextStudentId = data.nextStudentId || students.length + 1;
-      nextReceiptId = data.nextReceiptId || 1001;
-      save();
-      alert(`✅ Restore successful!\n${students.length} students and ${payments.length} payment records restored.\n\nExported on: ${data.exportedAt ? new Date(data.exportedAt).toLocaleString('en-IN') : 'Unknown'}`);
-      renderBackupPage();
-      renderDashboard();
-    } catch(err) {
-      alert('❌ Failed to restore. The file may be corrupted or is not a valid backup.\n\nError: ' + err.message);
-    }
-  };
-  reader.readAsText(file);
-}
-
-function restoreAutoBackup(index) {
-  const backups = JSON.parse(localStorage.getItem('pt_auto_backups') || '[]');
-  const snap = backups[index];
-  if (!snap) return;
-  if (!confirm(`Restore auto-backup from:\n${new Date(snap.ts).toLocaleString('en-IN')}\n\nThis will overwrite current data.`)) return;
-  students = snap.students;
-  payments = snap.payments;
-  nextStudentId = snap.nextStudentId;
-  nextReceiptId = snap.nextReceiptId;
-  save();
-  alert('✅ Auto-backup restored successfully!');
-  renderBackupPage();
-  renderDashboard();
-}
-
-function renderBackupPage() {
-  // Stats
-  const totalDeposited = payments.reduce((s,p)=>s+p.amount,0);
-  document.getElementById('backup-stats').innerHTML =
-    `Current data: <strong>${students.length} students</strong> · <strong>${payments.length} payment records</strong> · Total collected: <strong>₹${totalDeposited.toLocaleString('en-IN')}</strong>`;
-
-  // Auto backups
-  const backups = JSON.parse(localStorage.getItem('pt_auto_backups') || '[]');
-  const div = document.getElementById('auto-backup-list');
-  if (!backups.length) {
-    div.innerHTML = '<p style="color:var(--muted);font-size:13px;">No auto-backups yet. They appear here after you add students or record payments.</p>';
-    return;
-  }
-  div.innerHTML = `<table>
-    <thead><tr><th>#</th><th>Saved At</th><th>Students</th><th>Payments</th><th>Action</th></tr></thead>
-    <tbody>
-    ${backups.map((b,i)=>`<tr>
-      <td>${i===0?'<span class="badge badge-green">Latest</span>':'#'+(i+1)}</td>
-      <td>${new Date(b.ts).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
-      <td>${b.students.length}</td>
-      <td>${b.payments.length}</td>
-      <td><button class="btn btn-outline btn-sm" onclick="restoreAutoBackup(${i})">↩️ Restore</button></td>
-    </tr>`).join('')}
-    </tbody>
-  </table>`;
-}
-
-
-// ─── AUTH GUARD ───────────────────────────────────────────────────────────────
-(function(){
-  const raw = localStorage.getItem('pt_session');
-  if (!raw) { window.location.href = './index.html'; return; }
-  const s = JSON.parse(raw);
-  // Auto-expire after 8 hours of inactivity
-  const SESSION_TTL = 8 * 60 * 60 * 1000;
-  if (Date.now() - (s.loginTime || 0) > SESSION_TTL) {
-    localStorage.removeItem('pt_session');
-    window.location.href = './index.html';
-    return;
-  }
-  document.addEventListener('DOMContentLoaded', function(){
-    const nameEl = document.getElementById('topbar-user');
-    const roleEl = document.getElementById('topbar-role');
-    if (nameEl) nameEl.textContent = s.name || s.uid;
-    if (roleEl) roleEl.textContent = s.role === 'admin' ? '(Admin)' : '(Staff)';
-  });
-})();
-
-function doLogout() {
-  if (!confirm('Sign out of Providence Tutorials?')) return;
-  localStorage.removeItem('pt_session');
-  window.location.href = './index.html';
-}
-
-function currentSession() {
-  return JSON.parse(localStorage.getItem('pt_session') || '{}');
-}
-
-// ─── USER MANAGEMENT ─────────────────────────────────────────────────────────
-function getUsers() {
-  const stored = localStorage.getItem('pt_users');
-  if (stored) return JSON.parse(stored);
-  const defaults = [
-    { uid:'admin', password:'providence2025', role:'admin', name:'Administrator', active:true },
-    { uid:'staff', password:'staff123',       role:'staff', name:'Staff Member',   active:true }
-  ];
-  localStorage.setItem('pt_users', JSON.stringify(defaults));
-  return defaults;
-}
-function saveUsers(u) { localStorage.setItem('pt_users', JSON.stringify(u)); }
-
-// ─── SETTINGS PAGE TABS ───────────────────────────────────────────────────────
-function switchSettingsTab(tabId, el) {
-  document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active-tab'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById(tabId).classList.add('active-tab');
-  if (el) el.classList.add('active');
-}
-
-function renderSettingsPage() {
-  // First tab visible by default
-  document.querySelectorAll('.settings-tab').forEach((t,i) => {
-    t.classList.toggle('active-tab', i===0);
-  });
-  document.querySelectorAll('.tab').forEach((t,i) => {
-    t.classList.toggle('active', i===0);
-  });
-  renderUsersTable();
-  renderCodeLists();
-  // populate reset-code user dropdown
-  const sel = document.getElementById('reset-code-user');
-  if (sel) {
-    const users = getUsers();
-    sel.innerHTML = users.map(u => `<option value="${u.uid}">${u.name} (${u.uid})</option>`).join('');
-  }
-  // hide reset panel
-  const rp = document.getElementById('inline-reset-panel');
-  if (rp) rp.style.display = 'none';
-  // show/hide code tab based on role
-  const sess = currentSession();
-  const codeTabBtn = document.querySelectorAll('.tab')[2];
-  if (codeTabBtn) codeTabBtn.style.display = sess.role === 'admin' ? '' : 'none';
-}
-
-// ─── USER TABLE ───────────────────────────────────────────────────────────────
-function renderUsersTable() {
-  const users = getUsers();
-  const tb = document.getElementById('users-table');
-  const sess = currentSession();
-  tb.innerHTML = users.map(u => `<tr>
-    <td><code style="font-size:13px;font-weight:700;color:var(--navy);">${u.uid}</code></td>
-    <td>${u.name}</td>
-    <td><span class="badge ${u.role==='admin'?'badge-blue':'badge-yellow'}">${u.role}</span></td>
-    <td><span class="badge ${u.active?'badge-green':'badge-red'}">${u.active?'Active':'Inactive'}</span></td>
-    <td style="display:flex;gap:6px;flex-wrap:wrap;">
-      <button class="btn btn-outline btn-sm" onclick="editUser('${u.uid}')">✏️ Edit</button>
-      ${sess.role==='admin' && u.uid!==sess.uid ? `<button class="btn btn-gold btn-sm" onclick="showResetPanel('${u.uid}')">🔑 Reset PW</button>` : ''}
-      ${u.uid!==sess.uid ? `<button class="btn btn-sm ${u.active?'btn-red':'btn-green'}" onclick="toggleUser('${u.uid}')">${u.active?'🚫 Disable':'✅ Enable'}</button>` : '<span style="font-size:11px;color:var(--muted);">(you)</span>'}
-      ${u.uid!=='admin' && u.uid!==sess.uid ? `<button class="btn btn-red btn-sm" onclick="deleteUser('${u.uid}')">🗑️</button>` : ''}
-    </td>
-  </tr>`).join('');
-}
-
-// ─── DIRECT RESET (admin resets any user's password) ─────────────────────────
-function showResetPanel(uid) {
-  const panel = document.getElementById('inline-reset-panel');
-  document.getElementById('reset-for-uid').textContent = uid;
-  document.getElementById('direct-reset-pw').value = '';
-  document.getElementById('direct-reset-pw2').value = '';
-  panel.style.display = 'block';
-  panel.scrollIntoView({ behavior: 'smooth' });
-}
-function hideResetPanel() {
-  document.getElementById('inline-reset-panel').style.display = 'none';
-}
-function doDirectReset() {
-  const uid  = document.getElementById('reset-for-uid').textContent;
-  const pw1  = document.getElementById('direct-reset-pw').value;
-  const pw2  = document.getElementById('direct-reset-pw2').value;
-  if (!pw1||!pw2) { alert('Please enter both fields.'); return; }
-  if (pw1 !== pw2) { alert('Passwords do not match.'); return; }
-  if (pw1.length < 6) { alert('Password must be at least 6 characters.'); return; }
-  const users = getUsers();
-  const u = users.find(x => x.uid === uid);
-  if (!u) { alert('User not found.'); return; }
-  u.password = pw1;
-  saveUsers(users);
-  hideResetPanel();
-  alert(`✅ Password for "${uid}" has been reset successfully!
-Share the new password with them securely.`);
-}
-
-// ─── ADD / EDIT USER FORM ─────────────────────────────────────────────────────
-function saveUser() {
-  const origUid = document.getElementById('edit-uid-orig').value;
-  const uid  = document.getElementById('u-uid').value.trim().toLowerCase().replace(/\s+/g,'_');
-  const name = document.getElementById('u-name').value.trim();
-  const pw   = document.getElementById('u-pw').value;
-  const role = document.getElementById('u-role').value;
-  if (!uid||!name) { alert('User ID and Name are required.'); return; }
-  if (!origUid && pw.length < 6) { alert('Password must be at least 6 characters.'); return; }
-  const users = getUsers();
-  if (!origUid && users.find(u => u.uid===uid)) { alert('User ID already exists.'); return; }
-  if (origUid) {
-    const idx = users.findIndex(u => u.uid===origUid);
-    if (idx>=0) { users[idx].name=name; users[idx].role=role; if(pw.length>=6) users[idx].password=pw; }
-  } else {
-    users.push({ uid, password:pw, role, name, active:true });
-  }
-  saveUsers(users);
-  clearUserForm();
-  renderUsersTable();
-  switchSettingsTab('tab-users', document.querySelectorAll('.tab')[0]);
-  alert('✅ User saved successfully!');
-}
-
-function editUser(uid) {
-  const u = getUsers().find(x => x.uid===uid);
-  if (!u) return;
-  document.getElementById('edit-uid-orig').value = u.uid;
-  document.getElementById('u-uid').value = u.uid;
-  document.getElementById('u-uid').disabled = true;
-  document.getElementById('u-name').value = u.name;
-  document.getElementById('u-pw').value = '';
-  document.getElementById('u-pw-hint').textContent = 'Leave blank to keep current password.';
-  document.getElementById('u-role').value = u.role;
-  document.getElementById('user-form-title').textContent = '✏️ Edit User: ' + u.uid;
-  switchSettingsTab('tab-adduser', document.querySelectorAll('.tab')[1]);
-}
-
-function clearUserForm() {
-  document.getElementById('edit-uid-orig').value = '';
-  document.getElementById('u-uid').value = '';
-  document.getElementById('u-uid').disabled = false;
-  document.getElementById('u-name').value = '';
-  document.getElementById('u-pw').value = '';
-  document.getElementById('u-pw-hint').textContent = 'Required for new users.';
-  document.getElementById('u-role').value = 'staff';
-  document.getElementById('user-form-title').textContent = '➕ Add New User';
-}
-
-function toggleUser(uid) {
-  const users = getUsers();
-  const u = users.find(x => x.uid===uid);
-  if (u) { u.active = !u.active; saveUsers(users); renderUsersTable(); }
-}
-
-function deleteUser(uid) {
-  if (!confirm('Delete user "'+uid+'"? This cannot be undone.')) return;
-  saveUsers(getUsers().filter(u => u.uid!==uid));
-  renderUsersTable();
-}
-
-function changeMyPassword() {
-  const sess = currentSession();
-  const oldPw = document.getElementById('cp-old').value;
-  const newPw = document.getElementById('cp-new').value;
-  const conf  = document.getElementById('cp-confirm').value;
-  if (!oldPw||!newPw||!conf) { alert('Please fill all three fields.'); return; }
-  if (newPw!==conf) { alert('New passwords do not match.'); return; }
-  if (newPw.length<6) { alert('Password must be at least 6 characters.'); return; }
-  const users = getUsers();
-  const u = users.find(x => x.uid===sess.uid);
-  if (!u||u.password!==oldPw) { alert('❌ Current password is incorrect.'); return; }
-  u.password = newPw;
-  saveUsers(users);
-  alert('✅ Password updated! Please log in again.');
-  doLogout();
-}
-
-// ─── ACCESS CODES ─────────────────────────────────────────────────────────────
-function getCodes() { return JSON.parse(localStorage.getItem('pt_codes')||'[]'); }
-function saveCodes(c) { localStorage.setItem('pt_codes', JSON.stringify(c)); }
-
-function mkCode() {
-  const ch='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  return Array.from({length:8},()=>ch[Math.floor(Math.random()*ch.length)]).join('');
-}
-
-function generateCode(type) {
-  const sess = currentSession();
-  if (sess.role!=='admin') { alert('Only admin can generate access codes.'); return; }
-  const code = mkCode();
-  const ttl  = type==='reset' ? 2*60*60*1000 : 24*60*60*1000;
-  // For reset code, attach target user
-  const targetUser = type==='reset' ? document.getElementById('reset-code-user').value : null;
-  const codes = getCodes();
-  codes.push({ code, type, targetUser, used:false, createdAt:Date.now(), expiresAt:Date.now()+ttl, by:sess.uid });
-  saveCodes(codes);
-  // Display
-  const dispId  = type==='reset' ? 'reset-code-display' : 'enroll-code-display';
-  const copyId  = type==='reset' ? 'reset-copy-btn'     : 'enroll-copy-btn';
-  const dispEl  = document.getElementById(dispId);
-  const copyEl  = document.getElementById(copyId);
-  dispEl.textContent = code;
-  dispEl.style.display = 'block';
-  copyEl.style.display = 'inline-flex';
-  renderCodeLists();
-}
-
-function copyCodeDisplay(dispId, btnId) {
-  const txt = document.getElementById(dispId).textContent;
-  navigator.clipboard.writeText(txt).then(()=>{
-    const btn = document.getElementById(btnId);
-    btn.textContent = '✅ Copied!';
-    setTimeout(()=>btn.textContent='📋 Copy', 2000);
-  });
-}
-
-function renderCodeLists() {
-  const now = Date.now();
-  let codes = getCodes().filter(c=>c.expiresAt>now);
-  saveCodes(codes); // prune expired
-
-  const enroll = codes.filter(c=>c.type==='enroll');
-  const reset  = codes.filter(c=>c.type==='reset');
-
-  const enrollEl = document.getElementById('enroll-codes-list');
-  const resetEl  = document.getElementById('reset-codes-list');
-  if (!enrollEl || !resetEl) return;
-
-  const renderRow = (c,i) => `<tr>
-    <td><code style="font-size:15px;font-weight:700;letter-spacing:3px;">${c.code}</code></td>
-    <td>${c.targetUser ? '<strong>'+c.targetUser+'</strong>' : '— any staff —'}</td>
-    <td>${c.used ? '<span class="badge badge-red">Used</span>' : '<span class="badge badge-green">Active</span>'}</td>
-    <td style="font-size:12px;">${new Date(c.expiresAt).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
-    <td><button class="btn btn-red btn-sm" onclick="revokeCode('${c.code}')">🗑️ Revoke</button></td>
-  </tr>`;
-
-  const tbl = rows => rows.length ? `<table><thead><tr><th>Code</th><th>For User</th><th>Status</th><th>Expires</th><th>Action</th></tr></thead><tbody>${rows.map(renderRow).join('')}</tbody></table>`
-    : '<p style="font-size:13px;color:var(--muted);">No active codes. Generate one above.</p>';
-
-  enrollEl.innerHTML = tbl(enroll);
-  resetEl.innerHTML  = tbl(reset);
-}
-
-function revokeCode(code) {
-  if (!confirm('Revoke code '+code+'?')) return;
-  saveCodes(getCodes().filter(c=>c.code!==code));
-  renderCodeLists();
-}
-
-// ─── ENROLL GATE (non-admin needs enrollment code to add student) ─────────────
-function openStudentGated() {
-  const sess = currentSession();
-  if (sess.role==='admin') { openStudentModal(); return; }
-  // Staff needs valid enrollment code
-  document.getElementById('ac-input').value = '';
-  document.getElementById('ac-error').style.display = 'none';
-  document.getElementById('access-code-modal').classList.add('open');
-  setTimeout(()=>document.getElementById('ac-input').focus(),100);
-}
-
-function verifyEnrollCode() {
-  const entered = document.getElementById('ac-input').value.trim().toUpperCase();
-  const errEl   = document.getElementById('ac-error');
-  if (entered.length!==8) { errEl.textContent='Please enter the full 8-character code.'; errEl.style.display='block'; return; }
-  const now   = Date.now();
-  const codes = getCodes();
-  const idx   = codes.findIndex(c=>c.code===entered && c.type==='enroll' && !c.used && c.expiresAt>now);
-  if (idx===-1) { errEl.textContent='Invalid, expired, or already-used code. Ask admin for a new code.'; errEl.style.display='block'; return; }
-  codes[idx].used = true;
-  saveCodes(codes);
-  document.getElementById('access-code-modal').classList.remove('open');
-  openStudentModal();
-}
-
-// ─── INIT ─────────────────────────────────────────────────────────────────────
-renderDashboard();
-</script>
+    <script>
+        // ═══════════════════════════════════════════════════════════════════════════
+        // DATA LAYER (UPGRADED)
+        // ═══════════════════════════════════════════════════════════════════════════
+        let students = JSON.parse(localStorage.getItem('pt_students') || '[]');
+        let payments = JSON.parse(localStorage.getItem('pt_payments') || '[]');
+        let sessions = JSON.parse(localStorage.getItem('pt_sessions') || '[]');
+        let activeSession = localStorage.getItem('pt_activeSession') || '';
+        let nextStudentId = parseInt(localStorage.getItem('pt_sid') || '1');
+        let nextReceiptId = parseInt(localStorage.getItem('pt_rid') || '1001');
+
+        // ─── MIGRATION: Ensure all students have a session field ──────────────────
+        function migrateData() {
+            let changed = false;
+            // Create default session if none exist
+            if (!sessions.length) {
+                const now = new Date();
+                const yr = now.getFullYear();
+                const month = now.getMonth(); // 0-based
+                // Academic session typically starts in April
+                const startYr = month < 3 ? yr - 1 : yr;
+                const endYr = startYr + 1;
+                const defaultSession = {
+                    id: startYr + '-' + String(endYr).slice(-2),
+                    startYear: startYr,
+                    endYear: endYr,
+                    created: new Date().toISOString()
+                };
+                sessions.push(defaultSession);
+                activeSession = defaultSession.id;
+                changed = true;
+            }
+            // Assign session to students that lack it
+            students.forEach(s => {
+                if (!s.session) {
+                    s.session = activeSession || sessions[0].id;
+                    changed = true;
+                }
+                if (!s.previousDue && s.previousDue !== 0) {
+                    s.previousDue = 0;
+                    changed = true;
+                }
+                if (!s.promotionHistory) {
+                    s.promotionHistory = [];
+                    changed = true;
+                }
+            });
+            if (changed) saveAll();
+        }
+
+        function saveAll() {
+            localStorage.setItem('pt_students', JSON.stringify(students));
+            localStorage.setItem('pt_payments', JSON.stringify(payments));
+            localStorage.setItem('pt_sessions', JSON.stringify(sessions));
+            localStorage.setItem('pt_activeSession', activeSession);
+            localStorage.setItem('pt_sid', nextStudentId);
+            localStorage.setItem('pt_rid', nextReceiptId);
+            saveAutoBackup();
+        }
+
+        // Alias for backward compatibility
+        function save() { saveAll(); }
+
+        // ─── ACTIVE SESSION HELPERS ───────────────────────────────────────────────
+        function getActiveSessionStudents() {
+            if (!activeSession) return students;
+            return students.filter(s => s.session === activeSession);
+        }
+
+        function getActiveSessionPayments() {
+            const activeStudentIds = new Set(getActiveSessionStudents().map(s => s.id));
+            return payments.filter(p => activeStudentIds.has(p.studentId));
+        }
+
+        // ─── SCHOLAR NUMBER (NEW: 6-digit, YY + 4-digit serial per class per session) ──
+        function generateScholarNumber(cls, sessionId) {
+            const sess = sessions.find(s => s.id === sessionId);
+            const yy = sess ? String(sess.startYear).slice(-2) : String(new Date().getFullYear()).slice(-2);
+            // Find highest serial for this class + session
+            const existing = students
+                .filter(s => s.class === cls && s.session === sessionId && s.scholarNo && s.scholarNo.length === 6)
+                .map(s => parseInt(String(s.scholarNo).slice(2)) || 0);
+            const serial = existing.length ? Math.max(...existing) + 1 : 1;
+            return yy + String(serial).padStart(4, '0');
+        }
+
+        function previewScholarNumber() {
+            const cls = document.getElementById('s-class').value;
+            const editId = document.getElementById('edit-student-id').value;
+            if (editId) return;
+            const sessionId = document.getElementById('s-session').value || activeSession;
+            document.getElementById('s-scholar').value = generateScholarNumber(cls, sessionId) + ' (preview)';
+        }
+
+        // ─── NAVIGATION ───────────────────────────────────────────────────────────
+        const pageTitles = {
+            dashboard: 'Dashboard',
+            students: 'Students',
+            fees: 'Collect Fee',
+            records: 'Fee Records',
+            reminders: 'WhatsApp Reminders',
+            receipt: 'Print Receipt',
+            backup: 'Backup & Restore',
+            sessions: 'Sessions',
+            settings: 'Settings & User Management'
+        };
+
+        function showPage(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            const pg = document.getElementById('pg-' + id);
+            if (pg) pg.classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(n => {
+                if (n.getAttribute('onclick') === `showPage('${id}')`) n.classList.add('active');
+            });
+            document.getElementById('page-title').textContent = pageTitles[id] || id;
+
+            if (id === 'dashboard') renderDashboard();
+            if (id === 'students') renderStudents();
+            if (id === 'fees') populateFeeDropdowns();
+            if (id === 'records') { populateMonthFilter();
+                renderRecords(); }
+            if (id === 'reminders') renderReminders();
+            if (id === 'receipt') populateReceiptDropdowns();
+            if (id === 'backup') renderBackupPage();
+            if (id === 'sessions') renderSessionsPage();
+            if (id === 'settings') renderSettingsPage();
+        }
+
+        // ─── DATE ─────────────────────────────────────────────────────────────────
+        document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-IN', { weekday: 'long',
+            year: 'numeric', month: 'long', day: 'numeric' });
+        document.getElementById('fee-date').value = new Date().toISOString().split('T')[0];
+        const m = new Date();
+        document.getElementById('fee-month').value = m.getFullYear() + '-' + (String(m.getMonth() + 1).padStart(2,
+        '0'));
+
+        // ─── STUDENT HELPERS ──────────────────────────────────────────────────────
+        function getDeposited(id) {
+            return payments.filter(p => p.studentId === id).reduce((s, p) => s + p.amount, 0);
+        }
+
+        // ─── NEW: MONTH-WISE FEE CALCULATION ──────────────────────────────────────
+        function getDueMonths(student) {
+            // Due starts from the month AFTER joining
+            const joining = new Date(student.joining);
+            const now = new Date();
+            // First due month is the month after joining
+            const firstDueMonth = new Date(joining.getFullYear(), joining.getMonth() + 1, 1);
+            if (firstDueMonth > now) return 0;
+            // Count months from first due month to current month (inclusive)
+            const months = (now.getFullYear() - firstDueMonth.getFullYear()) * 12 +
+                (now.getMonth() - firstDueMonth.getMonth()) + 1;
+            return Math.max(0, months);
+        }
+
+        function getTotalDueForStudent(student) {
+            const dueMonths = getDueMonths(student);
+            const totalFee = dueMonths * student.monthlyFee;
+            const deposited = getDeposited(student.id);
+            const rawDue = totalFee - deposited + (student.previousDue || 0);
+            return Math.max(0, rawDue);
+        }
+
+        function getAdvanceBalance(student) {
+            const dueMonths = getDueMonths(student);
+            const totalFee = dueMonths * student.monthlyFee;
+            const deposited = getDeposited(student.id);
+            const rawDue = totalFee - deposited + (student.previousDue || 0);
+            if (rawDue < 0) return Math.abs(rawDue);
+            return 0;
+        }
+
+        function getNextPaymentDate(student) {
+            const dueMonths = getDueMonths(student);
+            const deposited = getDeposited(student.id);
+            const totalFee = dueMonths * student.monthlyFee;
+            const rawDue = totalFee - deposited + (student.previousDue || 0);
+            const advanceMonths = rawDue < 0 ? Math.floor(Math.abs(rawDue) / student.monthlyFee) : 0;
+            const joining = new Date(student.joining);
+            const firstDueMonth = new Date(joining.getFullYear(), joining.getMonth() + 1, 1);
+            const coveredMonths = dueMonths + advanceMonths;
+            const nextDueDate = new Date(firstDueMonth);
+            nextDueDate.setMonth(nextDueDate.getMonth() + coveredMonths);
+            return nextDueDate.toISOString().split('T')[0];
+        }
+
+        function getMonthsCoveredByPayment(student, paymentAmount) {
+            // How many months does this payment cover (including advance)?
+            const dueMonths = getDueMonths(student);
+            const totalFee = dueMonths * student.monthlyFee;
+            const existingDeposited = getDeposited(student.id);
+            const currentDue = Math.max(0, totalFee - existingDeposited + (student.previousDue || 0));
+            const advance = Math.max(0, paymentAmount - currentDue);
+            const advanceMonths = student.monthlyFee > 0 ? Math.floor(advance / student.monthlyFee) : 0;
+            return { coversDue: Math.min(paymentAmount, currentDue), advanceMonths, advanceAmount: advance };
+        }
+
+        // ─── DASHBOARD ────────────────────────────────────────────────────────────
+        function renderDashboard() {
+            const activeStudents = getActiveSessionStudents();
+            document.getElementById('d-total').textContent = activeStudents.length;
+            const now = new Date();
+            const ym = now.getFullYear() + '-' + (String(now.getMonth() + 1).padStart(2, '0'));
+            const monthlyCol = getActiveSessionPayments().filter(p => p.date.startsWith(ym)).reduce((s, p) => s + p
+                .amount, 0);
+            document.getElementById('d-collected').textContent = '₹' + monthlyCol.toLocaleString('en-IN');
+            const totalDue = activeStudents.reduce((s, st) => s + getTotalDueForStudent(st), 0);
+            document.getElementById('d-due').textContent = '₹' + totalDue.toLocaleString('en-IN');
+            const dueCount = activeStudents.filter(s => getTotalDueForStudent(s) > 0).length;
+            document.getElementById('d-due-count').textContent = dueCount;
+
+            const dtb = document.getElementById('due-table');
+            const dueStudents = activeStudents.filter(s => getTotalDueForStudent(s) > 0);
+            if (!dueStudents.length) {
+                dtb.innerHTML = '<tr><td colspan="6" class="empty-state">No pending dues 🎉</td></tr>';
+            } else {
+                dtb.innerHTML = dueStudents.map((s, i) => `<tr>
+                    <td>${i+1}</td><td><strong>${s.name}</strong></td><td>${s.class}</td>
+                    <td>₹${s.monthlyFee.toLocaleString('en-IN')}</td>
+                    <td><span class="badge badge-red">₹${getTotalDueForStudent(s).toLocaleString('en-IN')}</span></td>
+                    <td><button class="btn wa-btn btn-sm" onclick="sendWA('${s.id}')">📲 WhatsApp</button></td>
+                </tr>`).join('');
+            }
+
+            const rtb = document.getElementById('recent-table');
+            const recent = [...getActiveSessionPayments()].reverse().slice(0, 10);
+            if (!recent.length) {
+                rtb.innerHTML = '<tr><td colspan="5" class="empty-state">No payments yet</td></tr>';
+            } else {
+                rtb.innerHTML = recent.map(p => {
+                    const s = students.find(x => x.id === p.studentId);
+                    return `<tr><td><span class="badge badge-blue">#${p.receiptId}</span></td>
+                        <td>${s?s.name:'—'}</td><td>₹${p.amount.toLocaleString('en-IN')}</td>
+                        <td>${p.date}</td><td>${p.month}</td></tr>`;
+                }).join('');
+            }
+        }
+
+        // ─── STUDENTS ─────────────────────────────────────────────────────────────
+        function renderStudents() {
+            const q = (document.getElementById('student-search').value || '').toLowerCase();
+            const activeStudents = getActiveSessionStudents();
+            const filtered = activeStudents.filter(s => s.name.toLowerCase().includes(q) || s.class.toLowerCase()
+                .includes(q));
+            const tb = document.getElementById('student-table');
+            document.getElementById('student-session-badge').textContent = activeSession || 'All Sessions';
+            if (!filtered.length) {
+                tb.innerHTML =
+                    '<tr><td colspan="12" class="empty-state"><div class="big">👨‍🎓</div>No students found in active session</td></tr>';
+                return;
+            }
+            tb.innerHTML = filtered.map((s, i) => `<tr>
+                <td>${i+1}</td>
+                <td><span class="badge badge-blue" style="font-family:monospace;letter-spacing:1px;">${s.scholarNo||'—'}</span></td>
+                <td><strong>${s.name}</strong></td>
+                <td>${s.father}</td>
+                <td>${s.class}${s.section?' - '+s.section:''}</td>
+                <td><span class="badge badge-yellow">${s.session||'—'}</span></td>
+                <td>${s.school||'—'}</td>
+                <td>${s.joining}</td>
+                <td>₹${s.monthlyFee.toLocaleString('en-IN')}</td>
+                <td style="color:var(--green)">₹${getDeposited(s.id).toLocaleString('en-IN')}</td>
+                <td>${getTotalDueForStudent(s)>0?`<span class="badge badge-red">₹${getTotalDueForStudent(s).toLocaleString('en-IN')}</span>`:`<span class="badge badge-green">NIL</span>`}</td>
+                <td>
+                    <button class="btn btn-outline btn-sm" onclick="editStudent('${s.id}')">✏️</button>
+                    <button class="btn btn-red btn-sm" onclick="deleteStudent('${s.id}')">🗑️</button>
+                </td>
+            </tr>`).join('');
+        }
+
+        function openStudentModal(id) {
+            document.getElementById('student-modal-title').textContent = id ? 'Edit Student' : 'Add New Student';
+            document.getElementById('edit-student-id').value = id || '';
+            // Populate session dropdown
+            const sessSel = document.getElementById('s-session');
+            sessSel.innerHTML = sessions.map(s => `<option value="${s.id}">${s.id}</option>`).join('');
+            if (id) {
+                const s = students.find(x => x.id === id);
+                document.getElementById('s-name').value = s.name;
+                document.getElementById('s-father').value = s.father;
+                document.getElementById('s-mother').value = s.mother || '';
+                document.getElementById('s-class').value = s.class;
+                document.getElementById('s-section').value = s.section || '';
+                document.getElementById('s-scholar').value = s.scholarNo || '—';
+                document.getElementById('s-session').value = s.session || activeSession;
+                document.getElementById('s-school').value = s.school || '';
+                document.getElementById('s-address').value = s.address || '';
+                document.getElementById('s-father-ph').value = s.fatherPh || '';
+                document.getElementById('s-mother-ph').value = s.motherPh || '';
+                document.getElementById('s-wa').value = s.wa || '';
+                document.getElementById('s-joining').value = s.joining;
+                document.getElementById('s-fee').value = s.monthlyFee;
+                document.getElementById('s-prev-due').value = s.previousDue || 0;
+                document.getElementById('s-deposit').value = s.initDeposit || 0;
+            } else {
+                ['s-name', 's-father', 's-mother', 's-section', 's-school', 's-address', 's-father-ph', 's-mother-ph',
+                    's-wa'
+                ].forEach(f => document.getElementById(f).value = '');
+                document.getElementById('s-joining').value = new Date().toISOString().split('T')[0];
+                document.getElementById('s-fee').value = '';
+                document.getElementById('s-prev-due').value = '0';
+                document.getElementById('s-deposit').value = '0';
+                document.getElementById('s-class').value = 'Class 1';
+                if (sessSel) sessSel.value = activeSession;
+                previewScholarNumber();
+            }
+            document.getElementById('student-modal').classList.add('open');
+        }
+
+        function editStudent(id) { openStudentModal(id); }
+
+        function closeStudentModal() { document.getElementById('student-modal').classList.remove('open'); }
+
+        function saveStudent() {
+            const name = document.getElementById('s-name').value.trim();
+            const father = document.getElementById('s-father').value.trim();
+            const fee = parseFloat(document.getElementById('s-fee').value) || 0;
+            const joining = document.getElementById('s-joining').value;
+            const sessionId = document.getElementById('s-session').value || activeSession;
+            if (!name || !father || !fee || !joining) {
+                alert('Please fill Name, Father\'s Name, Monthly Fee and Joining Date.');
+                return;
+            }
+            if (!sessionId) { alert('Please select a session.'); return; }
+
+            const editId = document.getElementById('edit-student-id').value;
+            const cls = document.getElementById('s-class').value;
+            const obj = {
+                id: editId || 's' + nextStudentId,
+                scholarNo: editId ? (students.find(x => x.id === editId) || {}).scholarNo : generateScholarNumber(cls,
+                    sessionId),
+                name,
+                father,
+                mother: document.getElementById('s-mother').value.trim(),
+                class: cls,
+                section: document.getElementById('s-section').value.trim(),
+                session: sessionId,
+                school: document.getElementById('s-school').value.trim(),
+                address: document.getElementById('s-address').value.trim(),
+                fatherPh: document.getElementById('s-father-ph').value.trim(),
+                motherPh: document.getElementById('s-mother-ph').value.trim(),
+                wa: document.getElementById('s-wa').value.trim(),
+                joining,
+                monthlyFee: fee,
+                previousDue: parseFloat(document.getElementById('s-prev-due').value) || 0,
+                initDeposit: parseFloat(document.getElementById('s-deposit').value) || 0,
+                promotionHistory: editId ? (students.find(x => x.id === editId) || {}).promotionHistory || [] : []
+            };
+
+            if (editId) {
+                const idx = students.findIndex(x => x.id === editId);
+                if (idx >= 0) {
+                    obj.promotionHistory = students[idx].promotionHistory || [];
+                    students[idx] = obj;
+                }
+            } else {
+                students.push(obj);
+                nextStudentId++;
+                if (obj.initDeposit > 0) {
+                    payments.push({
+                        receiptId: nextReceiptId++,
+                        studentId: obj.id,
+                        amount: obj.initDeposit,
+                        date: joining,
+                        month: 'Admission',
+                        mode: 'Cash',
+                        note: 'Initial deposit'
+                    });
+                }
+            }
+            saveAll();
+            closeStudentModal();
+            renderStudents();
+        }
+
+        function deleteStudent(id) {
+            if (!confirm('Delete this student? All payment records will also be removed.')) return;
+            students = students.filter(s => s.id !== id);
+            payments = payments.filter(p => p.studentId !== id);
+            saveAll();
+            renderStudents();
+        }
+
+        // ─── FEE COLLECTION ───────────────────────────────────────────────────────
+        function populateFeeDropdowns() {
+            const sel = document.getElementById('fee-student');
+            const cur = sel.value;
+            const activeStudents = getActiveSessionStudents();
+            sel.innerHTML = '<option value="">— Select Student —</option>' + activeStudents.map(s =>
+                `<option value="${s.id}">${s.name} (${s.class})</option>`).join('');
+            sel.value = cur;
+            fillFeeDetails();
+        }
+
+        function fillFeeDetails() {
+            const id = document.getElementById('fee-student').value;
+            const s = students.find(x => x.id === id);
+            if (!s) {
+                document.getElementById('info-monthly').textContent = '₹0';
+                document.getElementById('info-deposited').textContent = '₹0';
+                document.getElementById('info-due').textContent = '₹0';
+                document.getElementById('info-advance').textContent = '₹0';
+                document.getElementById('fee-amount').value = '';
+                return;
+            }
+            document.getElementById('info-monthly').textContent = '₹' + s.monthlyFee.toLocaleString('en-IN');
+            document.getElementById('info-deposited').textContent = '₹' + getDeposited(s.id).toLocaleString('en-IN');
+            const due = getTotalDueForStudent(s);
+            document.getElementById('info-due').textContent = '₹' + due.toLocaleString('en-IN');
+            const adv = getAdvanceBalance(s);
+            document.getElementById('info-advance').textContent = '₹' + adv.toLocaleString('en-IN');
+            if (!document.getElementById('fee-amount').value) document.getElementById('fee-amount').value = due > 0 ?
+                Math.min(due, s.monthlyFee) : s.monthlyFee;
+        }
+
+        function doRecordPayment() {
+            const sid = document.getElementById('fee-student').value;
+            const amount = parseFloat(document.getElementById('fee-amount').value) || 0;
+            const date = document.getElementById('fee-date').value;
+            const month = document.getElementById('fee-month').value;
+            const mode = document.getElementById('fee-mode').value;
+            const note = document.getElementById('fee-note').value;
+            if (!sid || !amount || !date || !month) { alert('Please fill all required fields.'); return null; }
+            const pay = { receiptId: nextReceiptId++, studentId: sid, amount, date, month, mode, note };
+            payments.push(pay);
+            saveAll();
+            fillFeeDetails();
+            return pay;
+        }
+
+        function recordPayment() {
+            const p = doRecordPayment();
+            if (p) {
+                const s = students.find(x => x.id === p.studentId);
+                const adv = s ? getAdvanceBalance(s) : 0;
+                let msg = '✅ Payment recorded successfully! Receipt #' + p.receiptId;
+                if (adv > 0) msg += '\n\n📌 Advance balance: ₹' + adv.toLocaleString('en-IN') +
+                    ' — covers upcoming months.';
+                alert(msg);
+                document.getElementById('fee-amount').value = '';
+            }
+        }
+
+        function recordAndPrint() {
+            const p = doRecordPayment();
+            if (!p) return;
+            showPage('receipt');
+            populateReceiptDropdowns();
+            setTimeout(() => {
+                document.getElementById('receipt-record-sel').value = p.receiptId;
+                previewReceipt();
+                setTimeout(() => window.print(), 400);
+            }, 200);
+        }
+
+        // ─── FEE RECORDS ──────────────────────────────────────────────────────────
+        function populateMonthFilter() {
+            const sel = document.getElementById('record-filter-month');
+            const activePmts = getActiveSessionPayments();
+            const months = [...new Set(activePmts.map(p => p.month))].sort().reverse();
+            sel.innerHTML = '<option value="">All Months</option>' + months.map(m => `<option>${m}</option>`).join('');
+        }
+
+        function renderRecords() {
+            const q = (document.getElementById('record-search').value || '').toLowerCase();
+            const mf = document.getElementById('record-filter-month').value;
+            const activePmts = getActiveSessionPayments();
+            let recs = activePmts.filter(p => {
+                const s = students.find(x => x.id === p.studentId);
+                const nm = (s ? s.name : '').toLowerCase();
+                return nm.includes(q) && (!mf || p.month === mf);
+            }).reverse();
+
+            const tb = document.getElementById('records-table');
+            if (!recs.length) { tb.innerHTML = '<tr><td colspan="8" class="empty-state">No records found</td></tr>';
+            return; }
+            tb.innerHTML = recs.map(p => {
+                const s = students.find(x => x.id === p.studentId);
+                return `<tr>
+                    <td><span class="badge badge-blue">#${p.receiptId}</span></td>
+                    <td>${s?s.name:'—'}</td><td>${s?s.class:'—'}</td><td>${p.month}</td>
+                    <td style="font-weight:600;">₹${p.amount.toLocaleString('en-IN')}</td>
+                    <td>${p.date}</td><td><span class="badge badge-green">${p.mode}</span></td>
+                    <td>
+                        <button class="btn btn-outline btn-sm" onclick="viewReceiptById(${p.receiptId})">🖨️ Receipt</button>
+                        <button class="btn btn-red btn-sm" onclick="deletePayment(${p.receiptId})">🗑️</button>
+                    </td></tr>`;
+            }).join('');
+        }
+
+        function deletePayment(rid) {
+            if (!confirm('Delete this payment record?')) return;
+            payments = payments.filter(p => p.receiptId !== rid);
+            saveAll();
+            renderRecords();
+        }
+
+        function viewReceiptById(rid) {
+            showPage('receipt');
+            populateReceiptDropdowns();
+            setTimeout(() => {
+                document.getElementById('receipt-record-sel').value = rid;
+                previewReceipt();
+            }, 100);
+        }
+
+        // ─── WHATSAPP REMINDERS ───────────────────────────────────────────────────
+        function renderReminders() {
+            const activeStudents = getActiveSessionStudents();
+            const due = activeStudents.filter(s => getTotalDueForStudent(s) > 0);
+            const tb = document.getElementById('reminder-table');
+            if (!due.length) { tb.innerHTML =
+                '<tr><td colspan="7" class="empty-state">🎉 No pending dues!</td></tr>'; return; }
+            tb.innerHTML = due.map(s => `<tr>
+                <td><strong>${s.name}</strong></td><td>${s.class}</td><td>${s.father}</td>
+                <td>${s.wa||s.fatherPh||'—'}</td><td>₹${s.monthlyFee.toLocaleString('en-IN')}</td>
+                <td><span class="badge badge-red">₹${getTotalDueForStudent(s).toLocaleString('en-IN')}</span></td>
+                <td><button class="btn wa-btn btn-sm" onclick="sendWA('${s.id}')">📲 Send</button></td>
+            </tr>`).join('');
+        }
+
+        function buildWAMsg(sid) {
+            const s = students.find(x => x.id === sid);
+            if (!s) return '';
+            const due = getTotalDueForStudent(s);
+            return `Dear Parent of *${s.name}* (${s.class}),\n\nThis is a friendly reminder from *Providence Tutorials* that a fee of *₹${due.toLocaleString('en-IN')}* is pending for your ward.\n\nKindly deposit the fee as soon as possible to avoid any inconvenience.\n\nThank you 🙏\n— Providence Tutorials`;
+        }
+
+        function sendWA(sid) {
+            const s = students.find(x => x.id === sid);
+            if (!s) { alert('Student not found.'); return; }
+            const num = (s.wa || s.fatherPh || '').replace(/\D/g, '');
+            if (!num) { alert('No WhatsApp number found.'); return; }
+            const msg = buildWAMsg(sid);
+            window.open(`https://wa.me/91${num}?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        function sendAllReminders() {
+            const activeStudents = getActiveSessionStudents();
+            const due = activeStudents.filter(s => getTotalDueForStudent(s) > 0);
+            if (!due.length) { alert('No pending dues!'); return; }
+            if (!confirm(`Send WhatsApp reminders to ${due.length} students?`)) return;
+            due.forEach((s, i) => { setTimeout(() => sendWA(s.id), i * 600); });
+        }
+
+        // ─── RECEIPT (ENHANCED) ───────────────────────────────────────────────────
+        function populateReceiptDropdowns() {
+            const ssel = document.getElementById('receipt-student-sel');
+            const activeStudents = getActiveSessionStudents();
+            ssel.innerHTML = '<option value="">— All Students —</option>' + activeStudents.map(s =>
+                `<option value="${s.id}">${s.name}</option>`).join('');
+            filterReceiptRecords();
+        }
+
+        function filterReceiptRecords() {
+            const sid = document.getElementById('receipt-student-sel').value;
+            const activePmts = getActiveSessionPayments();
+            const recs = activePmts.filter(p => !sid || p.studentId === sid).reverse();
+            const sel = document.getElementById('receipt-record-sel');
+            sel.innerHTML = '<option value="">— Select a Payment —</option>' + recs.map(p => {
+                const s = students.find(x => x.id === p.studentId);
+                return `<option value="${p.receiptId}">#${p.receiptId} — ${s?s.name:''} — ₹${p.amount} — ${p.date}</option>`;
+            }).join('');
+        }
+
+        function previewReceipt() {
+            const rid = parseInt(document.getElementById('receipt-record-sel').value);
+            const p = payments.find(x => x.receiptId === rid);
+            const cont = document.getElementById('receipt-content');
+            if (!p) {
+                cont.innerHTML =
+                    '<div style="text-align:center;color:var(--muted);padding:30px;">Select a payment to preview</div>';
+                return;
+            }
+            const s = students.find(x => x.id === p.studentId);
+            const due = s ? getTotalDueForStudent(s) : 0;
+            const adv = s ? getAdvanceBalance(s) : 0;
+            const nextDate = s ? getNextPaymentDate(s) : '—';
+            const coverage = s ? getMonthsCoveredByPayment(s, p.amount) : { advanceMonths: 0, advanceAmount: 0 };
+            cont.innerHTML = `
+                <div class="receipt-header">
+                    <h2>Providence Tutorials</h2>
+                    <p>Fee Payment Receipt</p>
+                    <p style="font-size:9px;color:#aaa;">Agar Malwa, Madhya Pradesh</p>
+                </div>
+                <hr class="receipt-divider">
+                <div class="receipt-row"><span class="lbl">Receipt No.</span><span><strong>#${p.receiptId}</strong></span></div>
+                <div class="receipt-row"><span class="lbl">Date</span><span>${p.date}</span></div>
+                <hr class="receipt-divider">
+                <div class="receipt-row"><span class="lbl">Student Name</span><span><strong>${s?s.name:'—'}</strong></span></div>
+                <div class="receipt-row"><span class="lbl">Scholar No.</span><span style="font-family:monospace;font-weight:700;">${s?s.scholarNo||'—':'—'}</span></div>
+                <div class="receipt-row"><span class="lbl">Father's Name</span><span>${s?s.father:'—'}</span></div>
+                <div class="receipt-row"><span class="lbl">Class</span><span>${s?s.class+(s.section?' – '+s.section:''):'—'}</span></div>
+                <div class="receipt-row"><span class="lbl">Session</span><span>${s?s.session||'—':'—'}</span></div>
+                <div class="receipt-row"><span class="lbl">School</span><span>${s?s.school||'—':'—'}</span></div>
+                <hr class="receipt-divider">
+                <div class="receipt-row"><span class="lbl">Month</span><span>${p.month}</span></div>
+                <div class="receipt-row"><span class="lbl">Payment Mode</span><span>${p.mode}</span></div>
+                ${p.note?`<div class="receipt-row"><span class="lbl">Note</span><span>${p.note}</span></div>`:''}
+                <div class="receipt-total"><span>Amount Paid</span><span>₹${p.amount.toLocaleString('en-IN')}</span></div>
+                ${coverage.advanceMonths>0?`<div class="receipt-row" style="color:var(--blue);font-weight:600;margin-top:4px;"><span>Advance Months Covered</span><span>${coverage.advanceMonths} month(s)</span></div>`:''}
+                ${adv>0?`<div class="receipt-row" style="color:var(--blue);font-weight:600;margin-top:4px;"><span>Advance Balance</span><span>₹${adv.toLocaleString('en-IN')}</span></div>`:''}
+                <div class="receipt-row" style="margin-top:4px;"><span class="lbl">Next Payment Due</span><span style="font-weight:600;">${nextDate}</span></div>
+                ${due>0?`<div class="receipt-row" style="color:var(--red);font-weight:600;margin-top:6px;"><span>Balance Due</span><span>₹${due.toLocaleString('en-IN')}</span></div>`:'<div style="text-align:center;color:var(--green);font-size:11px;margin-top:8px;font-weight:600;">✅ No pending dues</div>'}
+                <div class="receipt-stamp">
+                    <hr style="border:none;border-top:1px dashed #ccc;margin:10px 0;">
+                    <span>This is a computer-generated receipt</span><br>
+                    <span style="font-size:9px;">Providence Tutorials — Thank you! 🙏</span>
+                </div>`;
+        }
+
+        // ─── SESSIONS MANAGEMENT (NEW) ────────────────────────────────────────────
+        function switchActiveSession() {
+            const sel = document.getElementById('active-session-select');
+            activeSession = sel.value;
+            localStorage.setItem('pt_activeSession', activeSession);
+            renderDashboard();
+            if (document.getElementById('pg-students').classList.contains('active')) renderStudents();
+            if (document.getElementById('pg-fees').classList.contains('active')) populateFeeDropdowns();
+            if (document.getElementById('pg-records').classList.contains('active')) { populateMonthFilter();
+                renderRecords(); }
+            if (document.getElementById('pg-reminders').classList.contains('active')) renderReminders();
+            if (document.getElementById('pg-receipt').classList.contains('active')) populateReceiptDropdowns();
+        }
+
+        function refreshSessionSelector() {
+            const sel = document.getElementById('active-session-select');
+            sel.innerHTML = sessions.map(s => `<option value="${s.id}" ${s.id===activeSession?'selected':''}>${s.id}</option>`)
+                .join('');
+            if (!activeSession && sessions.length > 0) {
+                activeSession = sessions[0].id;
+                sel.value = activeSession;
+                localStorage.setItem('pt_activeSession', activeSession);
+            }
+        }
+
+        function renderSessionsPage() {
+            refreshSessionSelector();
+            const div = document.getElementById('sessions-list');
+            if (!sessions.length) {
+                div.innerHTML = '<p style="color:var(--muted);font-size:13px;">No sessions created yet.</p>';
+            } else {
+                div.innerHTML = sessions.map(s => {
+                    const count = students.filter(st => st.session === s.id).length;
+                    const isActive = s.id === activeSession;
+                    return `<div class="session-card">
+                        <div class="sess-info">
+                            <span class="sess-name">📅 ${s.id}</span>
+                            <span class="sess-meta">| ${count} students | Created: ${new Date(s.created).toLocaleDateString('en-IN')}</span>
+                            ${isActive?'<span class="badge badge-green">Active</span>':''}
+                        </div>
+                        <div style="display:flex;gap:8px;">
+                            ${!isActive?`<button class="btn btn-primary btn-sm" onclick="setActiveSession('${s.id}')">✅ Set Active</button>`:''}
+                            <button class="btn btn-red btn-sm" onclick="deleteSession('${s.id}')" ${isActive?'disabled title="Cannot delete active session"':''}>🗑️</button>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+            // Populate promote target dropdown
+            const promoSel = document.getElementById('promote-target-session');
+            promoSel.innerHTML = '<option value="">— Select target session —</option>' + sessions.map(s =>
+                `<option value="${s.id}" ${s.id===activeSession?'disabled':''}>${s.id}</option>`).join('');
+            document.getElementById('promote-joining-date').value = new Date().toISOString().split('T')[0];
+        }
+
+        function setActiveSession(sessionId) {
+            activeSession = sessionId;
+            localStorage.setItem('pt_activeSession', activeSession);
+            refreshSessionSelector();
+            renderSessionsPage();
+            renderDashboard();
+        }
+
+        function showCreateSessionModal() {
+            document.getElementById('sess-start-year').value = new Date().getFullYear();
+            document.getElementById('sess-end-year').value = new Date().getFullYear() + 1;
+            document.getElementById('sess-error').style.display = 'none';
+            document.getElementById('session-modal').classList.add('open');
+        }
+
+        function createSession() {
+            const sy = parseInt(document.getElementById('sess-start-year').value);
+            const ey = parseInt(document.getElementById('sess-end-year').value);
+            const errEl = document.getElementById('sess-error');
+            errEl.style.display = 'none';
+            if (!sy || !ey) { errEl.textContent = 'Please enter both years.';
+                errEl.style.display = 'block'; return; }
+            if (ey !== sy + 1) { errEl.textContent = 'End year must be Start year + 1.';
+                errEl.style.display = 'block'; return; }
+            const id = sy + '-' + String(ey).slice(-2);
+            if (sessions.find(s => s.id === id)) { errEl.textContent = 'Session "' + id +
+                    '" already exists.';
+                errEl.style.display = 'block'; return; }
+            sessions.push({ id, startYear: sy, endYear: ey, created: new Date().toISOString() });
+            if (!activeSession) activeSession = id;
+            saveAll();
+            document.getElementById('session-modal').classList.remove('open');
+            refreshSessionSelector();
+            renderSessionsPage();
+            alert('✅ Session "' + id + '" created!');
+        }
+
+        function deleteSession(sessionId) {
+            if (sessionId === activeSession) { alert('Cannot delete the active session.'); return; }
+            const count = students.filter(s => s.session === sessionId).length;
+            if (count > 0 && !confirm(
+                    `Session "${sessionId}" has ${count} student(s). Deleting it will also remove those students. Continue?`
+                    )) return;
+            if (!confirm(`Delete session "${sessionId}"?`)) return;
+            students = students.filter(s => s.session !== sessionId);
+            sessions = sessions.filter(s => s.id !== sessionId);
+            saveAll();
+            refreshSessionSelector();
+            renderSessionsPage();
+        }
+
+        function promoteStudents() {
+            const targetSession = document.getElementById('promote-target-session').value;
+            const newJoining = document.getElementById('promote-joining-date').value;
+            if (!targetSession) { alert('Please select a target session.'); return; }
+            if (!newJoining) { alert('Please select a new joining date.'); return; }
+            if (targetSession === activeSession) { alert('Target session must be different from the active session.'); return; }
+            const activeStudents = getActiveSessionStudents();
+            if (!activeStudents.length) { alert('No students in the active session to promote.'); return; }
+            if (!confirm(
+                    `Promote ALL ${activeStudents.length} students from "${activeSession}" to "${targetSession}"?\n\nClasses will increment by 1.\nPrevious dues will be carried forward.\nNew scholar numbers will be assigned.`
+                    )) return;
+
+            activeStudents.forEach(s => {
+                const due = getTotalDueForStudent(s);
+                const clsNum = parseInt(s.class.replace(/\D/g, '')) || 1;
+                const newClass = clsNum < 12 ? 'Class ' + (clsNum + 1) : s.class;
+                const newScholarNo = generateScholarNumber(newClass, targetSession);
+                const newStudent = {
+                    ...s,
+                    id: 's' + nextStudentId,
+                    class: newClass,
+                    session: targetSession,
+                    scholarNo: newScholarNo,
+                    joining: newJoining,
+                    previousDue: due,
+                    initDeposit: 0,
+                    promotionHistory: [...(s.promotionHistory || []), { fromSession: s.session,
+                        toSession: targetSession, date: new Date().toISOString(), previousDue: due }]
+                };
+                students.push(newStudent);
+                nextStudentId++;
+            });
+            saveAll();
+            refreshSessionSelector();
+            renderSessionsPage();
+            alert(
+                `✅ ${activeStudents.length} students promoted to session "${targetSession}"!\n\nTheir previous dues have been carried forward. Switch the active session to view them.`
+                );
+        }
+
+        // ─── BACKUP & RESTORE ─────────────────────────────────────────────────────
+        const MAX_AUTO_BACKUPS = 10;
+
+        function saveAutoBackup() {
+            const backups = JSON.parse(localStorage.getItem('pt_auto_backups') || '[]');
+            const snapshot = {
+                ts: new Date().toISOString(),
+                students: JSON.parse(JSON.stringify(students)),
+                payments: JSON.parse(JSON.stringify(payments)),
+                sessions: JSON.parse(JSON.stringify(sessions)),
+                activeSession,
+                nextStudentId,
+                nextReceiptId
+            };
+            backups.unshift(snapshot);
+            if (backups.length > MAX_AUTO_BACKUPS) backups.length = MAX_AUTO_BACKUPS;
+            localStorage.setItem('pt_auto_backups', JSON.stringify(backups));
+        }
+
+        function exportBackup() {
+            const data = {
+                version: 2,
+                exportedAt: new Date().toISOString(),
+                institute: 'Providence Tutorials',
+                students,
+                payments,
+                sessions,
+                activeSession,
+                nextStudentId,
+                nextReceiptId
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            const dateStr = new Date().toISOString().slice(0, 10);
+            a.download = `providence_backup_${dateStr}.json`;
+            a.click();
+            URL.revokeObjectURL(a.href);
+            alert(`✅ Backup downloaded!\nFile: providence_backup_${dateStr}.json`);
+        }
+
+        function importBackup() {
+            const file = document.getElementById('restore-file').files[0];
+            if (!file) { alert('Please select a backup .json file first.'); return; }
+            if (!confirm('⚠️ WARNING: This will replace ALL current data.')) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (!data.students || !data.payments) throw new Error('Invalid backup file format.');
+                    students = data.students;
+                    payments = data.payments;
+                    sessions = data.sessions || [];
+                    activeSession = data.activeSession || '';
+                    nextStudentId = data.nextStudentId || students.length + 1;
+                    nextReceiptId = data.nextReceiptId || 1001;
+                    saveAll();
+                    refreshSessionSelector();
+                    alert(
+                        `✅ Restore successful!\n${students.length} students, ${payments.length} payments, ${sessions.length} sessions restored.`
+                        );
+                    renderBackupPage();
+                    renderDashboard();
+                } catch (err) {
+                    alert('❌ Failed to restore: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function restoreAutoBackup(index) {
+            const backups = JSON.parse(localStorage.getItem('pt_auto_backups') || '[]');
+            const snap = backups[index];
+            if (!snap) return;
+            if (!confirm(`Restore auto-backup from:\n${new Date(snap.ts).toLocaleString('en-IN')}?`)) return;
+            students = snap.students;
+            payments = snap.payments;
+            sessions = snap.sessions || [];
+            activeSession = snap.activeSession || '';
+            nextStudentId = snap.nextStudentId;
+            nextReceiptId = snap.nextReceiptId;
+            saveAll();
+            refreshSessionSelector();
+            alert('✅ Auto-backup restored!');
+            renderBackupPage();
+            renderDashboard();
+        }
+
+        function renderBackupPage() {
+            const totalDeposited = payments.reduce((s, p) => s + p.amount, 0);
+            document.getElementById('backup-stats').innerHTML =
+                `Current: <strong>${students.length} students</strong> · <strong>${payments.length} payments</strong> · <strong>${sessions.length} sessions</strong> · Collected: <strong>₹${totalDeposited.toLocaleString('en-IN')}</strong>`;
+            const backups = JSON.parse(localStorage.getItem('pt_auto_backups') || '[]');
+            const div = document.getElementById('auto-backup-list');
+            if (!backups.length) {
+                div.innerHTML =
+                    '<p style="color:var(--muted);font-size:13px;">No auto-backups yet. They appear after you save data.</p>';
+                return;
+            }
+            div.innerHTML = `<table><thead><tr><th>#</th><th>Saved At</th><th>Students</th><th>Payments</th><th>Action</th></tr></thead><tbody>
+                ${backups.map((b,i)=>`<tr>
+                    <td>${i===0?'<span class="badge badge-green">Latest</span>':'#'+(i+1)}</td>
+                    <td>${new Date(b.ts).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
+                    <td>${b.students.length}</td><td>${b.payments.length}</td>
+                    <td><button class="btn btn-outline btn-sm" onclick="restoreAutoBackup(${i})">↩️ Restore</button></td>
+                </tr>`).join('')}</tbody></table>`;
+        }
+
+        // ─── AUTH GUARD ───────────────────────────────────────────────────────────
+        (function() {
+            const raw = localStorage.getItem('pt_session');
+            if (!raw) { window.location.href = './index.html'; return; }
+            const s = JSON.parse(raw);
+            const SESSION_TTL = 8 * 60 * 60 * 1000;
+            if (Date.now() - (s.loginTime || 0) > SESSION_TTL) {
+                localStorage.removeItem('pt_session');
+                window.location.href = './index.html';
+                return;
+            }
+            document.addEventListener('DOMContentLoaded', function() {
+                const nameEl = document.getElementById('topbar-user');
+                const roleEl = document.getElementById('topbar-role');
+                if (nameEl) nameEl.textContent = s.name || s.uid;
+                if (roleEl) roleEl.textContent = s.role === 'admin' ? '(Admin)' : '(Staff)';
+                // Initialize session selector
+                migrateData();
+                refreshSessionSelector();
+                renderDashboard();
+                renderBackupPage();
+            });
+        })();
+
+        function doLogout() {
+            if (!confirm('Sign out of Providence Tutorials?')) return;
+            localStorage.removeItem('pt_session');
+            window.location.href = './index.html';
+        }
+
+        function currentSession() {
+            return JSON.parse(localStorage.getItem('pt_session') || '{}');
+        }
+
+        // ─── USER MANAGEMENT ─────────────────────────────────────────────────────
+        // Passwords stored with simple encoding (btoa) — not plain text
+        function encodePW(pw) { return btoa(pw); }
+
+        function decodePW(encoded) { try { return atob(encoded); } catch (e) { return encoded; } }
+
+        function getUsers() {
+            const stored = localStorage.getItem('pt_users');
+            if (stored) return JSON.parse(stored);
+            const defaults = [
+                { uid: 'admin', password: encodePW('providence2025'), role: 'admin', name: 'Administrator',
+                    active: true },
+                { uid: 'staff', password: encodePW('staff123'), role: 'staff', name: 'Staff Member', active: true }
+            ];
+            localStorage.setItem('pt_users', JSON.stringify(defaults));
+            return defaults;
+        }
+
+        function saveUsers(u) { localStorage.setItem('pt_users', JSON.stringify(u)); }
+
+        // ── Settings tab switcher ─────────────────────────────────────────────────
+        function openSTab(tabId, el) {
+            document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active-tab'));
+            document.querySelectorAll('.s-tab').forEach(t => t.classList.remove('active'));
+            const tab = document.getElementById(tabId);
+            if (tab) tab.classList.add('active-tab');
+            if (el) el.classList.add('active');
+        }
+
+        function renderSettingsPage() {
+            openSTab('st-users', document.querySelectorAll('.s-tab')[0]);
+            const rp = document.getElementById('inline-reset-panel');
+            if (rp) rp.style.display = 'none';
+            renderUsersTable();
+            renderCodeLists();
+            const sel = document.getElementById('reset-code-user');
+            if (sel) {
+                sel.innerHTML = getUsers().map(u => '<option value="' + u.uid + '">' + u.name + ' (' + u.uid +
+                    ')</option>').join('');
+            }
+            const sess = currentSession();
+            const codeBtn = document.getElementById('codes-tab-btn');
+            if (codeBtn) codeBtn.style.display = (sess.role === 'admin') ? '' : 'none';
+        }
+
+        function renderUsersTable() {
+            const users = getUsers();
+            const tb = document.getElementById('users-table');
+            const sess = currentSession();
+            if (!tb) return;
+            tb.innerHTML = users.map(u => '<tr>' +
+                '<td><code style="font-size:13px;font-weight:700;color:var(--navy);">' + u.uid + '</code></td>' +
+                '<td>' + u.name + '</td>' +
+                '<td><span class="badge ' + (u.role === 'admin' ? 'badge-blue' : 'badge-yellow') + '">' + u.role +
+                '</span></td>' +
+                '<td><span class="badge ' + (u.active ? 'badge-green' : 'badge-red') + '">' + (u.active ? 'Active' :
+                    'Inactive') + '</span></td>' +
+                '<td style="display:flex;gap:5px;flex-wrap:wrap;">' +
+                '<button class="btn btn-outline btn-sm" onclick="editUser(\'' + u.uid + '\')">✏️ Edit</button>' +
+                (sess.role === 'admin' && u.uid !== sess.uid ?
+                    '<button class="btn btn-gold btn-sm" onclick="showResetPanel(\'' + u.uid +
+                    '\')">🔑 Reset PW</button>' : '') +
+                (u.uid !== sess.uid ? '<button class="btn btn-sm ' + (u.active ? 'btn-red' : 'btn-green') +
+                    '" onclick="toggleUser(\'' + u.uid + '\')">' + (u.active ? '🚫 Disable' : '✅ Enable') +
+                    '</button>' :
+                    '<span style="font-size:11px;color:var(--muted);">(you)</span>') +
+                (u.uid !== 'admin' && u.uid !== sess.uid ? '<button class="btn btn-red btn-sm" onclick="deleteUser(\'' +
+                    u.uid + '\')">🗑️</button>' : '') +
+                '</td></tr>').join('');
+        }
+
+        function showResetPanel(uid) {
+            const sess = currentSession();
+            if (sess.role !== 'admin') { alert('Only admin can reset passwords.'); return; }
+            document.getElementById('reset-for-uid').textContent = uid;
+            document.getElementById('direct-reset-pw').value = '';
+            document.getElementById('direct-reset-pw2').value = '';
+            const panel = document.getElementById('inline-reset-panel');
+            panel.style.display = 'block';
+            panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function doDirectReset() {
+            const uid = document.getElementById('reset-for-uid').textContent.trim();
+            const pw1 = document.getElementById('direct-reset-pw').value;
+            const pw2 = document.getElementById('direct-reset-pw2').value;
+            if (!pw1 || !pw2) { alert('Please fill both password fields.'); return; }
+            if (pw1 !== pw2) { alert('Passwords do not match.'); return; }
+            if (pw1.length < 6) { alert('Password must be at least 6 characters.'); return; }
+            const users = getUsers();
+            const u = users.find(x => x.uid === uid);
+            if (!u) { alert('User not found.'); return; }
+            u.password = encodePW(pw1);
+            saveUsers(users);
+            document.getElementById('inline-reset-panel').style.display = 'none';
+            alert('✅ Password for "' + uid + '" has been reset! Share it securely.');
+        }
+
+        function saveUser() {
+            const origUid = document.getElementById('edit-uid-orig').value;
+            const uid = document.getElementById('u-uid').value.trim().toLowerCase().replace(/\s+/g, '_');
+            const name = document.getElementById('u-name').value.trim();
+            const pw = document.getElementById('u-pw').value;
+            const role = document.getElementById('u-role').value;
+            if (!uid || !name) { alert('User ID and Name are required.'); return; }
+            if (!origUid && pw.length < 6) { alert('Password must be at least 6 characters.'); return; }
+            const users = getUsers();
+            if (!origUid && users.find(u => u.uid === uid)) { alert('User ID "' + uid + '" already exists.'); return; }
+            if (origUid) {
+                const idx = users.findIndex(u => u.uid === origUid);
+                if (idx >= 0) {
+                    users[idx].name = name;
+                    users[idx].role = role;
+                    if (pw.length >= 6) users[idx].password = encodePW(pw);
+                }
+            } else {
+                users.push({ uid, password: encodePW(pw), role, name, active: true });
+            }
+            saveUsers(users);
+            clearUserForm();
+            renderUsersTable();
+            openSTab('st-users', document.querySelectorAll('.s-tab')[0]);
+            alert('✅ User saved successfully!');
+        }
+
+        function editUser(uid) {
+            const u = getUsers().find(x => x.uid === uid);
+            if (!u) return;
+            document.getElementById('edit-uid-orig').value = u.uid;
+            document.getElementById('u-uid').value = u.uid;
+            document.getElementById('u-uid').disabled = true;
+            document.getElementById('u-name').value = u.name;
+            document.getElementById('u-pw').value = '';
+            document.getElementById('u-pw-hint').textContent = 'Leave blank to keep current password.';
+            document.getElementById('u-role').value = u.role;
+            document.getElementById('user-form-title').textContent = '✏️ Edit User: ' + u.uid;
+            openSTab('st-adduser', document.querySelectorAll('.s-tab')[1]);
+        }
+
+        function clearUserForm() {
+            document.getElementById('edit-uid-orig').value = '';
+            document.getElementById('u-uid').value = '';
+            document.getElementById('u-uid').disabled = false;
+            document.getElementById('u-name').value = '';
+            document.getElementById('u-pw').value = '';
+            document.getElementById('u-pw-hint').textContent = 'Required for new users.';
+            document.getElementById('u-role').value = 'staff';
+            document.getElementById('user-form-title').textContent = '➕ Add New User';
+        }
+
+        function toggleUser(uid) {
+            const users = getUsers();
+            const u = users.find(x => x.uid === uid);
+            if (u) { u.active = !u.active;
+                saveUsers(users);
+                renderUsersTable(); }
+        }
+
+        function deleteUser(uid) {
+            if (!confirm('Delete user "' + uid + '"? This cannot be undone.')) return;
+            saveUsers(getUsers().filter(u => u.uid !== uid));
+            renderUsersTable();
+        }
+
+        function changeMyPassword() {
+            const sess = currentSession();
+            const oldPw = document.getElementById('cp-old').value;
+            const newPw = document.getElementById('cp-new').value;
+            const conf = document.getElementById('cp-confirm').value;
+            const msgEl = document.getElementById('pw-change-msg');
+            msgEl.style.display = 'none';
+            if (!oldPw || !newPw || !conf) { showPwMsg('Please fill all three fields.', '#fff0f0', '#842029'); return; }
+            if (newPw !== conf) { showPwMsg('New passwords do not match.', '#fff0f0', '#842029'); return; }
+            if (newPw.length < 6) { showPwMsg('Password must be at least 6 characters.', '#fff0f0', '#842029'); return; }
+            const users = getUsers();
+            const u = users.find(x => x.uid === sess.uid);
+            if (!u || decodePW(u.password) !== oldPw) { showPwMsg('❌ Current password is incorrect.', '#fff0f0',
+                    '#842029'); return; }
+            u.password = encodePW(newPw);
+            saveUsers(users);
+            showPwMsg('✅ Password updated! Logging you out now…', '#d4edda', '#155724');
+            setTimeout(doLogout, 1800);
+        }
+
+        function showPwMsg(txt, bg, color) {
+            const el = document.getElementById('pw-change-msg');
+            el.textContent = txt;
+            el.style.background = bg;
+            el.style.color = color;
+            el.style.border = '1px solid ' + color;
+            el.style.display = 'block';
+        }
+
+        // ─── ACCESS CODES ─────────────────────────────────────────────────────────
+        function getCodes() { return JSON.parse(localStorage.getItem('pt_codes') || '[]'); }
+
+        function saveCodes(codes) { localStorage.setItem('pt_codes', JSON.stringify(codes)); }
+
+        function mkCode() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let code = '';
+            for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
+            return code;
+        }
+
+        function generateCode(type) {
+            const sess = currentSession();
+            if (sess.role !== 'admin') { alert('Only admin can generate access codes.'); return; }
+            const code = mkCode();
+            const ttl = type === 'reset' ? 2 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+            const target = type === 'reset' ? (document.getElementById('reset-code-user').value || null) : null;
+            if (type === 'reset' && !target) { alert('Please select a user for the reset code.'); return; }
+            const codes = getCodes();
+            codes.push({ code, type, target, used: false, createdAt: Date.now(), expiresAt: Date.now() + ttl,
+                by: sess.uid });
+            saveCodes(codes);
+            const dispId = type === 'reset' ? 'reset-code-display' : 'enroll-code-display';
+            const btnId = type === 'reset' ? 'reset-copy-btn' : 'enroll-copy-btn';
+            const dispEl = document.getElementById(dispId);
+            const btnEl = document.getElementById(btnId);
+            dispEl.textContent = code;
+            dispEl.style.display = 'block';
+            btnEl.style.display = 'inline-flex';
+            renderCodeLists();
+        }
+
+        function copyCode(dispId, btnId) {
+            const txt = document.getElementById(dispId).textContent;
+            navigator.clipboard.writeText(txt).then(() => {
+                const b = document.getElementById(btnId);
+                b.textContent = '✅ Copied!';
+                setTimeout(() => b.textContent = '📋 Copy', 2000);
+            });
+        }
+
+        function renderCodeLists() {
+            const now = Date.now();
+            let codes = getCodes();
+            // Clean expired codes
+            codes = codes.filter(c => c.expiresAt > now);
+            saveCodes(codes);
+            const enroll = codes.filter(c => c.type === 'enroll');
+            const reset = codes.filter(c => c.type === 'reset');
+
+            const rowHtml = c =>
+                '<tr>' +
+                '<td><code style="font-size:15px;font-weight:700;letter-spacing:3px;">' + c.code + '</code></td>' +
+                '<td>' + (c.target ? '<strong>' + c.target + '</strong>' : '— any staff —') + '</td>' +
+                '<td>' + (c.used ? '<span class="badge badge-red">Used</span>' :
+                    '<span class="badge badge-green">Active</span>') + '</td>' +
+                '<td style="font-size:12px;">' + new Date(c.expiresAt).toLocaleString('en-IN', { day: '2-digit',
+                    month: 'short', hour: '2-digit', minute: '2-digit' }) + '</td>' +
+                '<td><button class="btn btn-red btn-sm" onclick="revokeCode(\'' + c.code + '\')">🗑️ Revoke</button></td>' +
+                '</tr>';
+
+            const tbl = rows => rows.length ?
+                '<table><thead><tr><th>Code</th><th>For User</th><th>Status</th><th>Expires</th><th>Action</th></tr></thead><tbody>' +
+                rows.map(rowHtml).join('') + '</tbody></table>' :
+                '<p style="font-size:13px;color:var(--muted);">No active codes. Generate one above.</p>';
+
+            const el1 = document.getElementById('enroll-codes-list');
+            const el2 = document.getElementById('reset-codes-list');
+            if (el1) el1.innerHTML = tbl(enroll);
+            if (el2) el2.innerHTML = tbl(reset);
+        }
+
+        function revokeCode(code) {
+            if (!confirm('Revoke code ' + code + '?')) return;
+            saveCodes(getCodes().filter(c => c.code !== code));
+            renderCodeLists();
+        }
+
+        // ─── ADD STUDENT GATE ─────────────────────────────────────────────────────
+        function openStudentGated() {
+            const sess = currentSession();
+            if (!activeSession && sess.role !== 'admin') {
+                alert('No active session selected. Please ask admin to set up a session first.');
+                return;
+            }
+            if (sess.role === 'admin') { openStudentModal(); return; }
+            document.getElementById('ac-input').value = '';
+            document.getElementById('ac-error').style.display = 'none';
+            document.getElementById('ac-modal').classList.add('open');
+            setTimeout(() => document.getElementById('ac-input').focus(), 150);
+        }
+
+        function verifyEnrollCode() {
+            const entered = document.getElementById('ac-input').value.trim().toUpperCase();
+            const errEl = document.getElementById('ac-error');
+            errEl.style.display = 'none';
+            if (entered.length !== 8) { errEl.textContent = 'Please enter the complete 8-character code.';
+                errEl.style.display = 'block'; return; }
+            const now = Date.now();
+            const codes = getCodes();
+            const idx = codes.findIndex(c => c.code === entered && c.type === 'enroll' && !c.used && c.expiresAt > now);
+            if (idx === -1) { errEl.textContent = 'Invalid, expired, or already-used code.';
+                errEl.style.display = 'block'; return; }
+            codes[idx].used = true;
+            saveCodes(codes);
+            document.getElementById('ac-modal').classList.remove('open');
+            openStudentModal();
+        }
+
+        // ─── INITIALIZATION ───────────────────────────────────────────────────────
+        // (Auth guard above handles DOMContentLoaded + initial render)
+        // Also render dashboard immediately if DOM already loaded
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            migrateData();
+            refreshSessionSelector();
+            renderDashboard();
+            renderBackupPage();
+        }
+    </script>
 </body>
 </html>
