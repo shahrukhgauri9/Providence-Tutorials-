@@ -393,7 +393,7 @@
     <!-- STUDENTS -->
     <div class="page" id="pg-students">
       <div style="display:flex; gap:10px; margin-bottom:20px;">
-        <button class="btn btn-primary" onclick="openStudentModal()">+ Add Student</button>
+        <button class="btn btn-primary" onclick="openStudentModalWithCheck()">+ Add Student</button>
         <input id="student-search" placeholder="🔍 Search by name / class..." style="width:260px;" oninput="renderStudents()">
       </div>
       <div class="panel">
@@ -613,6 +613,29 @@
         </div>
       </div>
 
+      <div class="panel" id="admin-reset-panel" style="display:none;">
+        <div class="panel-head"><h3>🔑 Admin: Reset User Password</h3></div>
+        <div class="panel-body">
+          <div style="background:#fff5f5;border:1px solid #f5c6cb;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:12.5px;color:#842029;">
+            ⚠️ You are resetting the password for user: <strong id="reset-target-uid"></strong>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>New Password*</label>
+              <input type="password" id="reset-new-pw" placeholder="Min 6 characters">
+            </div>
+            <div class="form-group">
+              <label>Confirm New Password*</label>
+              <input type="password" id="reset-confirm-pw" placeholder="Repeat new password">
+            </div>
+          </div>
+          <div style="margin-top:14px;display:flex;gap:10px;">
+            <button class="btn btn-gold" onclick="doAdminReset()">🔑 Set New Password</button>
+            <button class="btn btn-outline" onclick="cancelAdminReset()">Cancel</button>
+          </div>
+        </div>
+      </div>
+
       <div class="panel">
         <div class="panel-head"><h3>🔑 Change My Password</h3></div>
         <div class="panel-body">
@@ -635,9 +658,56 @@
           </div>
         </div>
       </div>
+
+      <div class="panel" id="access-code-panel">
+        <div class="panel-head">
+          <h3>🎟️ Student Enrollment Access Codes</h3>
+          <span style="font-size:12px;color:var(--muted);">Admin only</span>
+        </div>
+        <div class="panel-body">
+          <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">
+            Generate a one-time access code and share it with staff. The code must be entered before a new student can be added. Each code is <strong>single-use</strong> and expires in <strong>24 hours</strong>.
+          </p>
+          <div style="display:flex;gap:10px;align-items:center;margin-bottom:20px;">
+            <button class="btn btn-primary" onclick="generateAccessCode()">🎟️ Generate New Code</button>
+            <div id="generated-code-box" style="display:none;background:#f0f7ff;border:1.5px solid #c0d8f0;border-radius:10px;padding:10px 20px;font-family:monospace;font-size:22px;font-weight:700;color:var(--navy);letter-spacing:4px;"></div>
+            <button id="copy-code-btn" style="display:none;" class="btn btn-outline btn-sm" onclick="copyCode()">📋 Copy</button>
+          </div>
+          <div id="active-codes-wrap">
+            <div class="section-title">Active Codes</div>
+            <div id="active-codes-list"></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div><!-- /content -->
 </div><!-- /main -->
+
+<!-- ACCESS CODE MODAL -->
+<div class="modal-overlay" id="access-code-modal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <h3>🎟️ Enter Access Code</h3>
+      <button class="modal-close" onclick="closeAccessModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:18px;">
+        Adding new students requires an <strong>access code</strong> from the admin. Please enter the code you received.
+      </p>
+      <div class="form-group">
+        <label>Access Code</label>
+        <input type="text" id="access-code-input" placeholder="Enter 8-digit code" maxlength="8"
+          style="font-family:monospace;font-size:20px;letter-spacing:4px;text-align:center;text-transform:uppercase;"
+          oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')verifyAccessCode()">
+      </div>
+      <div id="access-code-error" style="display:none;color:var(--red);font-size:12.5px;margin-top:6px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeAccessModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="verifyAccessCode()">✅ Verify Code</button>
+    </div>
+  </div>
+</div>
 
 <!-- STUDENT MODAL -->
 <div class="modal-overlay" id="student-modal">
@@ -785,7 +855,7 @@ renderDashboard();
   if (id==='reminders') renderReminders();
   if (id==='receipt') populateReceiptDropdowns();
   if (id==='backup') renderBackupPage();
-  if (id==='settings') renderUsersTable();
+  if (id==='settings') { renderUsersTable(); renderActiveCodes(); applyRoleUI(); }
 }
 
 // ─── DATE ─────────────────────────────────────────────────────────────────────
@@ -795,14 +865,32 @@ const m = new Date(); document.getElementById('fee-month').value = m.getFullYear
 
 // ─── STUDENT HELPERS ──────────────────────────────────────────────────────────
 function getDeposited(id) { return payments.filter(p=>p.studentId===id).reduce((s,p)=>s+p.amount,0); }
+
+// Fee is charged only after a full month is COMPLETED.
+// Example: joined 15-Jan → first fee due on 1-Mar (Feb is first complete month)
+// completedMonths = how many full calendar months have passed since joining month ended
+function completedMonths(joining) {
+  const d1 = new Date(joining);
+  const now = new Date();
+  // Start counting from the 1st of the month AFTER joining month
+  const startYear  = d1.getMonth() === 11 ? d1.getFullYear() + 1 : d1.getFullYear();
+  const startMonth = (d1.getMonth() + 1) % 12; // month after joining
+  const start = new Date(startYear, startMonth, 1);
+  if (now < start) return 0; // still in joining month, nothing due yet
+  // Number of full months from start to now
+  const months = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
+  return Math.max(0, months);
+}
+
 function getDue(id) {
   const s = students.find(x=>x.id===id); if(!s) return 0;
-  const months = Math.max(1, monthsDiff(s.joining, new Date()));
+  const months = completedMonths(s.joining);
   return Math.max(0, (s.monthlyFee * months) - getDeposited(id));
 }
+
 function monthsDiff(from, to) {
   const d1 = new Date(from), d2 = new Date(to);
-  return (d2.getFullYear()-d1.getFullYear())*12 + (d2.getMonth()-d1.getMonth()) + 1;
+  return (d2.getFullYear()-d1.getFullYear())*12 + (d2.getMonth()-d1.getMonth());
 }
 
 // ─── DASHBOARD ────────────────────────────────────────────────────────────────
@@ -1295,6 +1383,7 @@ function renderUsersTable() {
     <td><span class="badge ${u.active?'badge-green':'badge-red'}">${u.active?'Active':'Inactive'}</span></td>
     <td>
       <button class="btn btn-outline btn-sm" onclick="editUser('${u.uid}')">✏️ Edit</button>
+      ${sess.role === 'admin' && u.uid !== sess.uid ? `<button class="btn btn-gold btn-sm" onclick="adminResetPassword('${u.uid}')">🔑 Reset PW</button>` : ''}
       ${u.uid !== sess.uid ? `<button class="btn btn-sm ${u.active?'btn-red':'btn-green'}" onclick="toggleUser('${u.uid}')">${u.active?'🚫 Disable':'✅ Enable'}</button>` : '<span style="font-size:11px;color:var(--muted);">(current)</span>'}
       ${u.uid !== 'admin' && u.uid !== sess.uid ? `<button class="btn btn-red btn-sm" onclick="deleteUser('${u.uid}')">🗑️</button>` : ''}
     </td>
@@ -1383,8 +1472,163 @@ function changeMyPassword() {
   doLogout();
 }
 
+// ─── ADMIN PASSWORD RESET ─────────────────────────────────────────────────────
+function adminResetPassword(uid) {
+  const sess = currentSession();
+  if (sess.role !== 'admin') { alert('Only admin can reset passwords.'); return; }
+  document.getElementById('reset-target-uid').textContent = uid;
+  document.getElementById('reset-new-pw').value = '';
+  document.getElementById('reset-confirm-pw').value = '';
+  document.getElementById('admin-reset-panel').style.display = 'block';
+  document.getElementById('admin-reset-panel').scrollIntoView({ behavior: 'smooth' });
+}
+
+function doAdminReset() {
+  const uid = document.getElementById('reset-target-uid').textContent;
+  const pw1 = document.getElementById('reset-new-pw').value;
+  const pw2 = document.getElementById('reset-confirm-pw').value;
+  if (!pw1 || !pw2) { alert('Please fill both password fields.'); return; }
+  if (pw1 !== pw2) { alert('Passwords do not match.'); return; }
+  if (pw1.length < 6) { alert('Password must be at least 6 characters.'); return; }
+  const users = getUsers();
+  const u = users.find(x => x.uid === uid);
+  if (!u) { alert('User not found.'); return; }
+  u.password = pw1;
+  saveUsers(users);
+  cancelAdminReset();
+  alert(`✅ Password for "${uid}" has been reset successfully!`);
+}
+
+function cancelAdminReset() {
+  document.getElementById('admin-reset-panel').style.display = 'none';
+  document.getElementById('reset-new-pw').value = '';
+  document.getElementById('reset-confirm-pw').value = '';
+}
+
+// ─── ACCESS CODES ─────────────────────────────────────────────────────────────
+function getAccessCodes() {
+  return JSON.parse(localStorage.getItem('pt_access_codes') || '[]');
+}
+function saveAccessCodes(codes) {
+  localStorage.setItem('pt_access_codes', JSON.stringify(codes));
+}
+
+function generateAccessCode() {
+  const sess = currentSession();
+  if (sess.role !== 'admin') { alert('Only admin can generate access codes.'); return; }
+  // Generate random 8-character alphanumeric code
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  const codes = getAccessCodes().filter(c => c.expiresAt > Date.now() && !c.used); // clean expired
+  codes.push({ code, createdAt: Date.now(), expiresAt: Date.now() + 24*60*60*1000, used: false, createdBy: sess.uid });
+  saveAccessCodes(codes);
+  // Show the code
+  const box = document.getElementById('generated-code-box');
+  const copyBtn = document.getElementById('copy-code-btn');
+  box.textContent = code;
+  box.style.display = 'block';
+  copyBtn.style.display = 'inline-flex';
+  renderActiveCodes();
+}
+
+function copyCode() {
+  const code = document.getElementById('generated-code-box').textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    document.getElementById('copy-code-btn').textContent = '✅ Copied!';
+    setTimeout(() => document.getElementById('copy-code-btn').textContent = '📋 Copy', 2000);
+  });
+}
+
+function renderActiveCodes() {
+  const now = Date.now();
+  const codes = getAccessCodes().filter(c => c.expiresAt > now);
+  saveAccessCodes(codes); // remove expired
+  const div = document.getElementById('active-codes-list');
+  if (!codes.length) { div.innerHTML = '<p style="font-size:13px;color:var(--muted);">No active codes. Generate one above.</p>'; return; }
+  div.innerHTML = `<table>
+    <thead><tr><th>Code</th><th>Status</th><th>Expires</th><th>Action</th></tr></thead>
+    <tbody>${codes.map((c,i) => `<tr>
+      <td><code style="font-size:15px;font-weight:700;letter-spacing:3px;">${c.code}</code></td>
+      <td>${c.used ? '<span class="badge badge-red">Used</span>' : '<span class="badge badge-green">Active</span>'}</td>
+      <td style="font-size:12px;">${new Date(c.expiresAt).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
+      <td><button class="btn btn-red btn-sm" onclick="revokeCode(${i})">🗑️ Revoke</button></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function revokeCode(idx) {
+  if (!confirm('Revoke this access code?')) return;
+  const codes = getAccessCodes().filter(c => c.expiresAt > Date.now());
+  codes.splice(idx, 1);
+  saveAccessCodes(codes);
+  renderActiveCodes();
+}
+
+// Access code gate for Add Student
+let accessGranted = false;
+
+function openStudentModalWithCheck() {
+  const sess = currentSession();
+  if (sess.role === 'admin') {
+    // Admin never needs code
+    openStudentModal();
+    return;
+  }
+  // Staff needs a valid access code
+  if (accessGranted) {
+    openStudentModal();
+    return;
+  }
+  // Show access code modal
+  document.getElementById('access-code-input').value = '';
+  document.getElementById('access-code-error').style.display = 'none';
+  document.getElementById('access-code-modal').classList.add('open');
+  setTimeout(() => document.getElementById('access-code-input').focus(), 100);
+}
+
+function closeAccessModal() {
+  document.getElementById('access-code-modal').classList.remove('open');
+}
+
+function verifyAccessCode() {
+  const entered = document.getElementById('access-code-input').value.trim().toUpperCase();
+  const errEl = document.getElementById('access-code-error');
+  if (entered.length !== 8) { errEl.textContent = 'Please enter a valid 8-character code.'; errEl.style.display='block'; return; }
+  const now = Date.now();
+  const codes = getAccessCodes();
+  const idx = codes.findIndex(c => c.code === entered && !c.used && c.expiresAt > now);
+  if (idx === -1) {
+    errEl.textContent = 'Invalid or expired code. Please ask admin for a new code.';
+    errEl.style.display = 'block';
+    return;
+  }
+  // Mark as used
+  codes[idx].used = true;
+  saveAccessCodes(codes);
+  accessGranted = true;
+  closeAccessModal();
+  openStudentModal();
+  // Reset grant after modal closes (single use per session open)
+  setTimeout(() => { accessGranted = false; }, 500);
+}
+
+// Override the Add Student button to use the gated version
+// (done by replacing onclick in HTML — handled in HTML section above)
+
+// Show/hide access code panel based on role
+function applyRoleUI() {
+  const sess = currentSession();
+  const acPanel = document.getElementById('access-code-panel');
+  const resetPanel = document.getElementById('admin-reset-panel');
+  if (acPanel) acPanel.style.display = sess.role === 'admin' ? 'block' : 'none';
+  if (resetPanel) resetPanel.style.display = 'none'; // always hidden until triggered
+}
+
 // ─── INIT ─────────────────────────────────────────────────────────────────────
+applyRoleUI();
 renderDashboard();
 </script>
 </body>
 </html>
+
