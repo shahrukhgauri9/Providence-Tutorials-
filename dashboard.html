@@ -306,6 +306,8 @@
   .tab.active { color: var(--navy); border-bottom-color: var(--gold); }
 
   .help-text { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+  .settings-tab { display:none; }
+  .settings-tab.active-tab { display:block; }
 </style>
 </head>
 <body>
@@ -324,6 +326,7 @@
     <div class="nav-item" onclick="showPage('reminders')"><span class="icon">📲</span> WhatsApp Reminders</div>
     <div class="nav-item" onclick="showPage('receipt')"><span class="icon">🖨️</span> Print Receipt</div>
     <div class="nav-item" onclick="showPage('backup')"><span class="icon">💾</span> Backup & Restore</div>
+    <div class="nav-item" onclick="showPage('settings')"><span class="icon">⚙️</span> Settings</div>
   </nav>
   <div class="sidebar-footer">© 2025 Providence Tutorials</div>
 </div>
@@ -393,7 +396,7 @@
     <!-- STUDENTS -->
     <div class="page" id="pg-students">
       <div style="display:flex; gap:10px; margin-bottom:20px;">
-        <button class="btn btn-primary" onclick="openStudentModalWithCheck()">+ Add Student</button>
+        <button class="btn btn-primary" onclick="openStudentGated()">+ Add Student</button>
         <input id="student-search" placeholder="🔍 Search by name / class..." style="width:260px;" oninput="renderStudents()">
       </div>
       <div class="panel">
@@ -570,145 +573,203 @@
     </div>
 
 
-    <!-- SETTINGS / USER MANAGEMENT -->
+    <!-- SETTINGS PAGE -->
     <div class="page" id="pg-settings">
-      <div class="panel">
-        <div class="panel-head"><h3>👤 User Accounts</h3></div>
-        <div class="panel-body" style="padding:0;">
-          <table>
-            <thead><tr><th>User ID</th><th>Name</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody id="users-table"></tbody>
-          </table>
-        </div>
+
+      <!-- TAB BAR -->
+      <div class="tabs">
+        <div class="tab active" onclick="switchSettingsTab('tab-users',this)">👤 User Accounts</div>
+        <div class="tab" onclick="switchSettingsTab('tab-adduser',this)">➕ Add / Edit User</div>
+        <div class="tab" onclick="switchSettingsTab('tab-codes',this)">🎟️ Access Codes</div>
+        <div class="tab" onclick="switchSettingsTab('tab-mypw',this)">🔑 My Password</div>
       </div>
-      <div class="panel">
-        <div class="panel-head"><h3 id="user-form-title">➕ Add User</h3></div>
-        <div class="panel-body">
-          <input type="hidden" id="edit-uid-orig">
-          <div class="form-grid">
-            <div class="form-group">
-              <label>User ID*</label>
-              <input type="text" id="u-uid" placeholder="e.g. teacher1" autocomplete="off">
-            </div>
-            <div class="form-group">
-              <label>Full Name*</label>
-              <input type="text" id="u-name" placeholder="Display name">
-            </div>
-            <div class="form-group">
-              <label>Password*</label>
-              <input type="password" id="u-pw" placeholder="Min 6 characters" autocomplete="new-password">
-            </div>
-            <div class="form-group">
-              <label>Role</label>
-              <select id="u-role">
-                <option value="admin">Admin (full access)</option>
-                <option value="staff">Staff (view only)</option>
-              </select>
-            </div>
+
+      <!-- TAB: USER ACCOUNTS -->
+      <div id="tab-users" class="settings-tab">
+        <div class="panel">
+          <div class="panel-head">
+            <h3>👤 All User Accounts</h3>
+            <button class="btn btn-primary btn-sm" onclick="switchSettingsTab('tab-adduser', document.querySelectorAll('.tab')[1])">➕ Add New User</button>
           </div>
-          <div style="margin-top:14px;display:flex;gap:10px;">
-            <button class="btn btn-primary" onclick="saveUser()">💾 Save User</button>
-            <button class="btn btn-outline" onclick="clearUserForm()">Clear</button>
+          <div class="panel-body" style="padding:0;">
+            <table>
+              <thead><tr><th>User ID</th><th>Name</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="users-table"></tbody>
+            </table>
+          </div>
+        </div>
+        <!-- Inline Reset PW panel (shown when Reset PW clicked) -->
+        <div class="panel" id="inline-reset-panel" style="display:none; border:2px solid var(--gold);">
+          <div class="panel-head" style="background:#fffbf0;">
+            <h3>🔑 Reset Password — <span id="reset-for-uid" style="color:var(--gold);"></span></h3>
+            <button class="btn btn-outline btn-sm" onclick="hideResetPanel()">✕ Cancel</button>
+          </div>
+          <div class="panel-body">
+            <div style="background:#fff5cc;border:1px solid #e6cc00;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;">
+              ⚠️ Admin is setting a new password directly. No access code needed for admin.
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>New Password*</label>
+                <input type="password" id="direct-reset-pw" placeholder="Min 6 characters">
+              </div>
+              <div class="form-group">
+                <label>Confirm New Password*</label>
+                <input type="password" id="direct-reset-pw2" placeholder="Repeat password">
+              </div>
+            </div>
+            <div style="margin-top:14px;">
+              <button class="btn btn-gold" onclick="doDirectReset()">🔑 Set New Password</button>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="panel" id="admin-reset-panel" style="display:none;">
-        <div class="panel-head"><h3>🔑 Admin: Reset User Password</h3></div>
-        <div class="panel-body">
-          <div style="background:#fff5f5;border:1px solid #f5c6cb;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:12.5px;color:#842029;">
-            ⚠️ You are resetting the password for user: <strong id="reset-target-uid"></strong>
-          </div>
-          <div class="form-grid">
-            <div class="form-group">
-              <label>New Password*</label>
-              <input type="password" id="reset-new-pw" placeholder="Min 6 characters">
+      <!-- TAB: ADD / EDIT USER -->
+      <div id="tab-adduser" class="settings-tab" style="display:none;">
+        <div class="panel">
+          <div class="panel-head"><h3 id="user-form-title">➕ Add New User</h3></div>
+          <div class="panel-body">
+            <input type="hidden" id="edit-uid-orig">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>User ID*</label>
+                <input type="text" id="u-uid" placeholder="e.g. teacher1" autocomplete="off">
+                <span class="help-text">Lowercase letters/numbers only. Cannot be changed later.</span>
+              </div>
+              <div class="form-group">
+                <label>Full Name*</label>
+                <input type="text" id="u-name" placeholder="Display name">
+              </div>
+              <div class="form-group">
+                <label>Password*</label>
+                <input type="password" id="u-pw" placeholder="Min 6 characters" autocomplete="new-password">
+                <span class="help-text" id="u-pw-hint">Required for new users.</span>
+              </div>
+              <div class="form-group">
+                <label>Role</label>
+                <select id="u-role">
+                  <option value="admin">Admin (full access)</option>
+                  <option value="staff">Staff (view &amp; collect fee only)</option>
+                </select>
+              </div>
             </div>
-            <div class="form-group">
-              <label>Confirm New Password*</label>
-              <input type="password" id="reset-confirm-pw" placeholder="Repeat new password">
+            <div style="margin-top:16px;display:flex;gap:10px;">
+              <button class="btn btn-primary" onclick="saveUser()">💾 Save User</button>
+              <button class="btn btn-outline" onclick="clearUserForm()">🔄 Clear Form</button>
             </div>
-          </div>
-          <div style="margin-top:14px;display:flex;gap:10px;">
-            <button class="btn btn-gold" onclick="doAdminReset()">🔑 Set New Password</button>
-            <button class="btn btn-outline" onclick="cancelAdminReset()">Cancel</button>
           </div>
         </div>
       </div>
 
-      <div class="panel">
-        <div class="panel-head"><h3>🔑 Change My Password</h3></div>
-        <div class="panel-body">
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Current Password</label>
-              <input type="password" id="cp-old" placeholder="Current password">
-            </div>
-            <div class="form-group">
-              <label>New Password</label>
-              <input type="password" id="cp-new" placeholder="New password (min 6 chars)">
-            </div>
-            <div class="form-group">
-              <label>Confirm New Password</label>
-              <input type="password" id="cp-confirm" placeholder="Repeat new password">
-            </div>
+      <!-- TAB: ACCESS CODES -->
+      <div id="tab-codes" class="settings-tab" style="display:none;">
+
+        <!-- Generate code for Add Student -->
+        <div class="panel">
+          <div class="panel-head">
+            <h3>🎟️ Add-Student Access Codes</h3>
+            <span style="font-size:12px;color:var(--muted);">Admin only · Single-use · 24 hr expiry</span>
           </div>
-          <div style="margin-top:14px;">
-            <button class="btn btn-gold" onclick="changeMyPassword()">🔑 Update Password</button>
+          <div class="panel-body">
+            <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">
+              Staff need this code to add a new student. Generate a code, share it via WhatsApp/message. It works <strong>once</strong> and expires in <strong>24 hours</strong>.
+            </p>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+              <button class="btn btn-primary" onclick="generateCode('enroll')">🎟️ Generate Enrollment Code</button>
+              <div id="enroll-code-display" style="display:none;background:#f0f7ff;border:2px solid #c0d8f0;border-radius:10px;padding:10px 22px;font-family:monospace;font-size:24px;font-weight:700;color:var(--navy);letter-spacing:5px;"></div>
+              <button id="enroll-copy-btn" style="display:none;" class="btn btn-outline btn-sm" onclick="copyCodeDisplay('enroll-code-display','enroll-copy-btn')">📋 Copy</button>
+            </div>
+            <div class="section-title">Active Enrollment Codes</div>
+            <div id="enroll-codes-list"></div>
+          </div>
+        </div>
+
+        <!-- Generate code for Password Reset -->
+        <div class="panel">
+          <div class="panel-head">
+            <h3>🔐 Password-Reset Access Codes</h3>
+            <span style="font-size:12px;color:var(--muted);">Admin only · Single-use · 2 hr expiry</span>
+          </div>
+          <div class="panel-body">
+            <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">
+              When a user forgets their password, generate a reset code and share it. The user enters this code on the login page instead of their password to set a new one. Works <strong>once</strong>, expires in <strong>2 hours</strong>.
+            </p>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+              <div class="form-group" style="margin:0;">
+                <label>For which user?</label>
+                <select id="reset-code-user" style="min-width:180px;"></select>
+              </div>
+              <button class="btn btn-gold" onclick="generateCode('reset')" style="margin-top:18px;">🔐 Generate Reset Code</button>
+              <div id="reset-code-display" style="display:none;background:#fffbf0;border:2px solid var(--gold);border-radius:10px;padding:10px 22px;font-family:monospace;font-size:24px;font-weight:700;color:var(--navy);letter-spacing:5px;"></div>
+              <button id="reset-copy-btn" style="display:none;" class="btn btn-outline btn-sm" onclick="copyCodeDisplay('reset-code-display','reset-copy-btn')">📋 Copy</button>
+            </div>
+            <div class="section-title">Active Reset Codes</div>
+            <div id="reset-codes-list"></div>
           </div>
         </div>
       </div>
 
-      <div class="panel" id="access-code-panel">
-        <div class="panel-head">
-          <h3>🎟️ Student Enrollment Access Codes</h3>
-          <span style="font-size:12px;color:var(--muted);">Admin only</span>
-        </div>
-        <div class="panel-body">
-          <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">
-            Generate a one-time access code and share it with staff. The code must be entered before a new student can be added. Each code is <strong>single-use</strong> and expires in <strong>24 hours</strong>.
-          </p>
-          <div style="display:flex;gap:10px;align-items:center;margin-bottom:20px;">
-            <button class="btn btn-primary" onclick="generateAccessCode()">🎟️ Generate New Code</button>
-            <div id="generated-code-box" style="display:none;background:#f0f7ff;border:1.5px solid #c0d8f0;border-radius:10px;padding:10px 20px;font-family:monospace;font-size:22px;font-weight:700;color:var(--navy);letter-spacing:4px;"></div>
-            <button id="copy-code-btn" style="display:none;" class="btn btn-outline btn-sm" onclick="copyCode()">📋 Copy</button>
-          </div>
-          <div id="active-codes-wrap">
-            <div class="section-title">Active Codes</div>
-            <div id="active-codes-list"></div>
+      <!-- TAB: MY PASSWORD -->
+      <div id="tab-mypw" class="settings-tab" style="display:none;">
+        <div class="panel">
+          <div class="panel-head"><h3>🔑 Change My Password</h3></div>
+          <div class="panel-body">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Current Password</label>
+                <input type="password" id="cp-old" placeholder="Current password">
+              </div>
+              <div class="form-group">
+                <label>New Password</label>
+                <input type="password" id="cp-new" placeholder="Min 6 characters">
+              </div>
+              <div class="form-group">
+                <label>Confirm New Password</label>
+                <input type="password" id="cp-confirm" placeholder="Repeat new password">
+              </div>
+            </div>
+            <div style="margin-top:14px;">
+              <button class="btn btn-gold" onclick="changeMyPassword()">🔑 Update Password</button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+    </div><!-- /pg-settings -->
   </div><!-- /content -->
 </div><!-- /main -->
 
-<!-- ACCESS CODE MODAL -->
+
+<!-- ACCESS CODE MODAL (for non-admin adding student) -->
 <div class="modal-overlay" id="access-code-modal">
   <div class="modal" style="max-width:420px;">
     <div class="modal-header">
-      <h3>🎟️ Enter Access Code</h3>
-      <button class="modal-close" onclick="closeAccessModal()">✕</button>
+      <h3>🎟️ Enter Enrollment Access Code</h3>
+      <button class="modal-close" onclick="document.getElementById('access-code-modal').classList.remove('open')">✕</button>
     </div>
     <div class="modal-body">
       <p style="font-size:13px;color:var(--muted);margin-bottom:18px;">
-        Adding new students requires an <strong>access code</strong> from the admin. Please enter the code you received.
+        Adding a new student requires a one-time <strong>access code</strong> from the admin.
       </p>
       <div class="form-group">
         <label>Access Code</label>
-        <input type="text" id="access-code-input" placeholder="Enter 8-digit code" maxlength="8"
+        <input type="text" id="ac-input" maxlength="8"
+          placeholder="Enter 8-character code"
           style="font-family:monospace;font-size:20px;letter-spacing:4px;text-align:center;text-transform:uppercase;"
-          oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')verifyAccessCode()">
+          oninput="this.value=this.value.toUpperCase()"
+          onkeydown="if(event.key==='Enter')verifyEnrollCode()">
       </div>
-      <div id="access-code-error" style="display:none;color:var(--red);font-size:12.5px;margin-top:6px;"></div>
+      <div id="ac-error" style="display:none;color:var(--red);font-size:12.5px;margin-top:8px;padding:8px 12px;background:#fff0f0;border-radius:6px;"></div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeAccessModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="verifyAccessCode()">✅ Verify Code</button>
+      <button class="btn btn-outline" onclick="document.getElementById('access-code-modal').classList.remove('open')">Cancel</button>
+      <button class="btn btn-primary" onclick="verifyEnrollCode()">✅ Verify & Continue</button>
     </div>
   </div>
 </div>
 
+<!-- PASSWORD RESET VIA ACCESS CODE MODAL (on login page this is handled separately; here for in-app use) -->
 <!-- STUDENT MODAL -->
 <div class="modal-overlay" id="student-modal">
   <div class="modal">
@@ -855,7 +916,7 @@ renderDashboard();
   if (id==='reminders') renderReminders();
   if (id==='receipt') populateReceiptDropdowns();
   if (id==='backup') renderBackupPage();
-  if (id==='settings') { renderUsersTable(); renderActiveCodes(); applyRoleUI(); }
+  if (id==='settings') renderUsersTable();
 }
 
 // ─── DATE ─────────────────────────────────────────────────────────────────────
@@ -865,32 +926,14 @@ const m = new Date(); document.getElementById('fee-month').value = m.getFullYear
 
 // ─── STUDENT HELPERS ──────────────────────────────────────────────────────────
 function getDeposited(id) { return payments.filter(p=>p.studentId===id).reduce((s,p)=>s+p.amount,0); }
-
-// Fee is charged only after a full month is COMPLETED.
-// Example: joined 15-Jan → first fee due on 1-Mar (Feb is first complete month)
-// completedMonths = how many full calendar months have passed since joining month ended
-function completedMonths(joining) {
-  const d1 = new Date(joining);
-  const now = new Date();
-  // Start counting from the 1st of the month AFTER joining month
-  const startYear  = d1.getMonth() === 11 ? d1.getFullYear() + 1 : d1.getFullYear();
-  const startMonth = (d1.getMonth() + 1) % 12; // month after joining
-  const start = new Date(startYear, startMonth, 1);
-  if (now < start) return 0; // still in joining month, nothing due yet
-  // Number of full months from start to now
-  const months = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
-  return Math.max(0, months);
-}
-
 function getDue(id) {
   const s = students.find(x=>x.id===id); if(!s) return 0;
-  const months = completedMonths(s.joining);
+  const months = Math.max(1, monthsDiff(s.joining, new Date()));
   return Math.max(0, (s.monthlyFee * months) - getDeposited(id));
 }
-
 function monthsDiff(from, to) {
   const d1 = new Date(from), d2 = new Date(to);
-  return (d2.getFullYear()-d1.getFullYear())*12 + (d2.getMonth()-d1.getMonth());
+  return (d2.getFullYear()-d1.getFullYear())*12 + (d2.getMonth()-d1.getMonth()) + 1;
 }
 
 // ─── DASHBOARD ────────────────────────────────────────────────────────────────
@@ -1370,63 +1413,125 @@ function getUsers() {
   localStorage.setItem('pt_users', JSON.stringify(defaults));
   return defaults;
 }
-function saveUsers(users) { localStorage.setItem('pt_users', JSON.stringify(users)); }
+function saveUsers(u) { localStorage.setItem('pt_users', JSON.stringify(u)); }
 
+// ─── SETTINGS PAGE TABS ───────────────────────────────────────────────────────
+function switchSettingsTab(tabId, el) {
+  document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active-tab'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active-tab');
+  if (el) el.classList.add('active');
+}
+
+function renderSettingsPage() {
+  // First tab visible by default
+  document.querySelectorAll('.settings-tab').forEach((t,i) => {
+    t.classList.toggle('active-tab', i===0);
+  });
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', i===0);
+  });
+  renderUsersTable();
+  renderCodeLists();
+  // populate reset-code user dropdown
+  const sel = document.getElementById('reset-code-user');
+  if (sel) {
+    const users = getUsers();
+    sel.innerHTML = users.map(u => `<option value="${u.uid}">${u.name} (${u.uid})</option>`).join('');
+  }
+  // hide reset panel
+  const rp = document.getElementById('inline-reset-panel');
+  if (rp) rp.style.display = 'none';
+  // show/hide code tab based on role
+  const sess = currentSession();
+  const codeTabBtn = document.querySelectorAll('.tab')[2];
+  if (codeTabBtn) codeTabBtn.style.display = sess.role === 'admin' ? '' : 'none';
+}
+
+// ─── USER TABLE ───────────────────────────────────────────────────────────────
 function renderUsersTable() {
   const users = getUsers();
   const tb = document.getElementById('users-table');
   const sess = currentSession();
   tb.innerHTML = users.map(u => `<tr>
-    <td><code style="font-size:13px;font-weight:700;">${u.uid}</code></td>
+    <td><code style="font-size:13px;font-weight:700;color:var(--navy);">${u.uid}</code></td>
     <td>${u.name}</td>
     <td><span class="badge ${u.role==='admin'?'badge-blue':'badge-yellow'}">${u.role}</span></td>
     <td><span class="badge ${u.active?'badge-green':'badge-red'}">${u.active?'Active':'Inactive'}</span></td>
-    <td>
+    <td style="display:flex;gap:6px;flex-wrap:wrap;">
       <button class="btn btn-outline btn-sm" onclick="editUser('${u.uid}')">✏️ Edit</button>
-      ${sess.role === 'admin' && u.uid !== sess.uid ? `<button class="btn btn-gold btn-sm" onclick="adminResetPassword('${u.uid}')">🔑 Reset PW</button>` : ''}
-      ${u.uid !== sess.uid ? `<button class="btn btn-sm ${u.active?'btn-red':'btn-green'}" onclick="toggleUser('${u.uid}')">${u.active?'🚫 Disable':'✅ Enable'}</button>` : '<span style="font-size:11px;color:var(--muted);">(current)</span>'}
-      ${u.uid !== 'admin' && u.uid !== sess.uid ? `<button class="btn btn-red btn-sm" onclick="deleteUser('${u.uid}')">🗑️</button>` : ''}
+      ${sess.role==='admin' && u.uid!==sess.uid ? `<button class="btn btn-gold btn-sm" onclick="showResetPanel('${u.uid}')">🔑 Reset PW</button>` : ''}
+      ${u.uid!==sess.uid ? `<button class="btn btn-sm ${u.active?'btn-red':'btn-green'}" onclick="toggleUser('${u.uid}')">${u.active?'🚫 Disable':'✅ Enable'}</button>` : '<span style="font-size:11px;color:var(--muted);">(you)</span>'}
+      ${u.uid!=='admin' && u.uid!==sess.uid ? `<button class="btn btn-red btn-sm" onclick="deleteUser('${u.uid}')">🗑️</button>` : ''}
     </td>
   </tr>`).join('');
 }
 
+// ─── DIRECT RESET (admin resets any user's password) ─────────────────────────
+function showResetPanel(uid) {
+  const panel = document.getElementById('inline-reset-panel');
+  document.getElementById('reset-for-uid').textContent = uid;
+  document.getElementById('direct-reset-pw').value = '';
+  document.getElementById('direct-reset-pw2').value = '';
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth' });
+}
+function hideResetPanel() {
+  document.getElementById('inline-reset-panel').style.display = 'none';
+}
+function doDirectReset() {
+  const uid  = document.getElementById('reset-for-uid').textContent;
+  const pw1  = document.getElementById('direct-reset-pw').value;
+  const pw2  = document.getElementById('direct-reset-pw2').value;
+  if (!pw1||!pw2) { alert('Please enter both fields.'); return; }
+  if (pw1 !== pw2) { alert('Passwords do not match.'); return; }
+  if (pw1.length < 6) { alert('Password must be at least 6 characters.'); return; }
+  const users = getUsers();
+  const u = users.find(x => x.uid === uid);
+  if (!u) { alert('User not found.'); return; }
+  u.password = pw1;
+  saveUsers(users);
+  hideResetPanel();
+  alert(`✅ Password for "${uid}" has been reset successfully!
+Share the new password with them securely.`);
+}
+
+// ─── ADD / EDIT USER FORM ─────────────────────────────────────────────────────
 function saveUser() {
   const origUid = document.getElementById('edit-uid-orig').value;
-  const uid   = document.getElementById('u-uid').value.trim().toLowerCase().replace(/\s+/g,'_');
-  const name  = document.getElementById('u-name').value.trim();
-  const pw    = document.getElementById('u-pw').value;
-  const role  = document.getElementById('u-role').value;
-  if (!uid || !name) { alert('User ID and Name are required.'); return; }
+  const uid  = document.getElementById('u-uid').value.trim().toLowerCase().replace(/\s+/g,'_');
+  const name = document.getElementById('u-name').value.trim();
+  const pw   = document.getElementById('u-pw').value;
+  const role = document.getElementById('u-role').value;
+  if (!uid||!name) { alert('User ID and Name are required.'); return; }
   if (!origUid && pw.length < 6) { alert('Password must be at least 6 characters.'); return; }
   const users = getUsers();
-  if (!origUid && users.find(u => u.uid === uid)) { alert('User ID already exists. Choose a different one.'); return; }
+  if (!origUid && users.find(u => u.uid===uid)) { alert('User ID already exists.'); return; }
   if (origUid) {
-    const idx = users.findIndex(u => u.uid === origUid);
-    if (idx >= 0) {
-      users[idx].name = name;
-      users[idx].role = role;
-      if (pw.length >= 6) users[idx].password = pw;
-    }
+    const idx = users.findIndex(u => u.uid===origUid);
+    if (idx>=0) { users[idx].name=name; users[idx].role=role; if(pw.length>=6) users[idx].password=pw; }
   } else {
-    users.push({ uid, password: pw, role, name, active: true });
+    users.push({ uid, password:pw, role, name, active:true });
   }
   saveUsers(users);
   clearUserForm();
   renderUsersTable();
+  switchSettingsTab('tab-users', document.querySelectorAll('.tab')[0]);
   alert('✅ User saved successfully!');
 }
 
 function editUser(uid) {
-  const u = getUsers().find(x => x.uid === uid);
+  const u = getUsers().find(x => x.uid===uid);
   if (!u) return;
   document.getElementById('edit-uid-orig').value = u.uid;
   document.getElementById('u-uid').value = u.uid;
   document.getElementById('u-uid').disabled = true;
   document.getElementById('u-name').value = u.name;
   document.getElementById('u-pw').value = '';
-  document.getElementById('u-pw').placeholder = 'Leave blank to keep current';
+  document.getElementById('u-pw-hint').textContent = 'Leave blank to keep current password.';
   document.getElementById('u-role').value = u.role;
   document.getElementById('user-form-title').textContent = '✏️ Edit User: ' + u.uid;
+  switchSettingsTab('tab-adduser', document.querySelectorAll('.tab')[1]);
 }
 
 function clearUserForm() {
@@ -1435,23 +1540,20 @@ function clearUserForm() {
   document.getElementById('u-uid').disabled = false;
   document.getElementById('u-name').value = '';
   document.getElementById('u-pw').value = '';
-  document.getElementById('u-pw').placeholder = 'Min 6 characters';
+  document.getElementById('u-pw-hint').textContent = 'Required for new users.';
   document.getElementById('u-role').value = 'staff';
-  document.getElementById('user-form-title').textContent = '➕ Add User';
+  document.getElementById('user-form-title').textContent = '➕ Add New User';
 }
 
 function toggleUser(uid) {
   const users = getUsers();
-  const u = users.find(x => x.uid === uid);
-  if (!u) return;
-  u.active = !u.active;
-  saveUsers(users);
-  renderUsersTable();
+  const u = users.find(x => x.uid===uid);
+  if (u) { u.active = !u.active; saveUsers(users); renderUsersTable(); }
 }
 
 function deleteUser(uid) {
-  if (!confirm('Delete user "' + uid + '"? This cannot be undone.')) return;
-  saveUsers(getUsers().filter(u => u.uid !== uid));
+  if (!confirm('Delete user "'+uid+'"? This cannot be undone.')) return;
+  saveUsers(getUsers().filter(u => u.uid!==uid));
   renderUsersTable();
 }
 
@@ -1459,176 +1561,118 @@ function changeMyPassword() {
   const sess = currentSession();
   const oldPw = document.getElementById('cp-old').value;
   const newPw = document.getElementById('cp-new').value;
-  const confirm2 = document.getElementById('cp-confirm').value;
-  if (!oldPw || !newPw || !confirm2) { alert('Please fill all fields.'); return; }
-  if (newPw !== confirm2) { alert('New passwords do not match.'); return; }
-  if (newPw.length < 6) { alert('New password must be at least 6 characters.'); return; }
+  const conf  = document.getElementById('cp-confirm').value;
+  if (!oldPw||!newPw||!conf) { alert('Please fill all three fields.'); return; }
+  if (newPw!==conf) { alert('New passwords do not match.'); return; }
+  if (newPw.length<6) { alert('Password must be at least 6 characters.'); return; }
   const users = getUsers();
-  const u = users.find(x => x.uid === sess.uid);
-  if (!u || u.password !== oldPw) { alert('❌ Current password is incorrect.'); return; }
+  const u = users.find(x => x.uid===sess.uid);
+  if (!u||u.password!==oldPw) { alert('❌ Current password is incorrect.'); return; }
   u.password = newPw;
   saveUsers(users);
-  alert('✅ Password changed successfully! Please login again.');
+  alert('✅ Password updated! Please log in again.');
   doLogout();
 }
 
-// ─── ADMIN PASSWORD RESET ─────────────────────────────────────────────────────
-function adminResetPassword(uid) {
-  const sess = currentSession();
-  if (sess.role !== 'admin') { alert('Only admin can reset passwords.'); return; }
-  document.getElementById('reset-target-uid').textContent = uid;
-  document.getElementById('reset-new-pw').value = '';
-  document.getElementById('reset-confirm-pw').value = '';
-  document.getElementById('admin-reset-panel').style.display = 'block';
-  document.getElementById('admin-reset-panel').scrollIntoView({ behavior: 'smooth' });
-}
-
-function doAdminReset() {
-  const uid = document.getElementById('reset-target-uid').textContent;
-  const pw1 = document.getElementById('reset-new-pw').value;
-  const pw2 = document.getElementById('reset-confirm-pw').value;
-  if (!pw1 || !pw2) { alert('Please fill both password fields.'); return; }
-  if (pw1 !== pw2) { alert('Passwords do not match.'); return; }
-  if (pw1.length < 6) { alert('Password must be at least 6 characters.'); return; }
-  const users = getUsers();
-  const u = users.find(x => x.uid === uid);
-  if (!u) { alert('User not found.'); return; }
-  u.password = pw1;
-  saveUsers(users);
-  cancelAdminReset();
-  alert(`✅ Password for "${uid}" has been reset successfully!`);
-}
-
-function cancelAdminReset() {
-  document.getElementById('admin-reset-panel').style.display = 'none';
-  document.getElementById('reset-new-pw').value = '';
-  document.getElementById('reset-confirm-pw').value = '';
-}
-
 // ─── ACCESS CODES ─────────────────────────────────────────────────────────────
-function getAccessCodes() {
-  return JSON.parse(localStorage.getItem('pt_access_codes') || '[]');
-}
-function saveAccessCodes(codes) {
-  localStorage.setItem('pt_access_codes', JSON.stringify(codes));
+function getCodes() { return JSON.parse(localStorage.getItem('pt_codes')||'[]'); }
+function saveCodes(c) { localStorage.setItem('pt_codes', JSON.stringify(c)); }
+
+function mkCode() {
+  const ch='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({length:8},()=>ch[Math.floor(Math.random()*ch.length)]).join('');
 }
 
-function generateAccessCode() {
+function generateCode(type) {
   const sess = currentSession();
-  if (sess.role !== 'admin') { alert('Only admin can generate access codes.'); return; }
-  // Generate random 8-character alphanumeric code
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code = '';
-  for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
-  const codes = getAccessCodes().filter(c => c.expiresAt > Date.now() && !c.used); // clean expired
-  codes.push({ code, createdAt: Date.now(), expiresAt: Date.now() + 24*60*60*1000, used: false, createdBy: sess.uid });
-  saveAccessCodes(codes);
-  // Show the code
-  const box = document.getElementById('generated-code-box');
-  const copyBtn = document.getElementById('copy-code-btn');
-  box.textContent = code;
-  box.style.display = 'block';
-  copyBtn.style.display = 'inline-flex';
-  renderActiveCodes();
+  if (sess.role!=='admin') { alert('Only admin can generate access codes.'); return; }
+  const code = mkCode();
+  const ttl  = type==='reset' ? 2*60*60*1000 : 24*60*60*1000;
+  // For reset code, attach target user
+  const targetUser = type==='reset' ? document.getElementById('reset-code-user').value : null;
+  const codes = getCodes();
+  codes.push({ code, type, targetUser, used:false, createdAt:Date.now(), expiresAt:Date.now()+ttl, by:sess.uid });
+  saveCodes(codes);
+  // Display
+  const dispId  = type==='reset' ? 'reset-code-display' : 'enroll-code-display';
+  const copyId  = type==='reset' ? 'reset-copy-btn'     : 'enroll-copy-btn';
+  const dispEl  = document.getElementById(dispId);
+  const copyEl  = document.getElementById(copyId);
+  dispEl.textContent = code;
+  dispEl.style.display = 'block';
+  copyEl.style.display = 'inline-flex';
+  renderCodeLists();
 }
 
-function copyCode() {
-  const code = document.getElementById('generated-code-box').textContent;
-  navigator.clipboard.writeText(code).then(() => {
-    document.getElementById('copy-code-btn').textContent = '✅ Copied!';
-    setTimeout(() => document.getElementById('copy-code-btn').textContent = '📋 Copy', 2000);
+function copyCodeDisplay(dispId, btnId) {
+  const txt = document.getElementById(dispId).textContent;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const btn = document.getElementById(btnId);
+    btn.textContent = '✅ Copied!';
+    setTimeout(()=>btn.textContent='📋 Copy', 2000);
   });
 }
 
-function renderActiveCodes() {
+function renderCodeLists() {
   const now = Date.now();
-  const codes = getAccessCodes().filter(c => c.expiresAt > now);
-  saveAccessCodes(codes); // remove expired
-  const div = document.getElementById('active-codes-list');
-  if (!codes.length) { div.innerHTML = '<p style="font-size:13px;color:var(--muted);">No active codes. Generate one above.</p>'; return; }
-  div.innerHTML = `<table>
-    <thead><tr><th>Code</th><th>Status</th><th>Expires</th><th>Action</th></tr></thead>
-    <tbody>${codes.map((c,i) => `<tr>
-      <td><code style="font-size:15px;font-weight:700;letter-spacing:3px;">${c.code}</code></td>
-      <td>${c.used ? '<span class="badge badge-red">Used</span>' : '<span class="badge badge-green">Active</span>'}</td>
-      <td style="font-size:12px;">${new Date(c.expiresAt).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
-      <td><button class="btn btn-red btn-sm" onclick="revokeCode(${i})">🗑️ Revoke</button></td>
-    </tr>`).join('')}</tbody>
-  </table>`;
+  let codes = getCodes().filter(c=>c.expiresAt>now);
+  saveCodes(codes); // prune expired
+
+  const enroll = codes.filter(c=>c.type==='enroll');
+  const reset  = codes.filter(c=>c.type==='reset');
+
+  const enrollEl = document.getElementById('enroll-codes-list');
+  const resetEl  = document.getElementById('reset-codes-list');
+  if (!enrollEl || !resetEl) return;
+
+  const renderRow = (c,i) => `<tr>
+    <td><code style="font-size:15px;font-weight:700;letter-spacing:3px;">${c.code}</code></td>
+    <td>${c.targetUser ? '<strong>'+c.targetUser+'</strong>' : '— any staff —'}</td>
+    <td>${c.used ? '<span class="badge badge-red">Used</span>' : '<span class="badge badge-green">Active</span>'}</td>
+    <td style="font-size:12px;">${new Date(c.expiresAt).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
+    <td><button class="btn btn-red btn-sm" onclick="revokeCode('${c.code}')">🗑️ Revoke</button></td>
+  </tr>`;
+
+  const tbl = rows => rows.length ? `<table><thead><tr><th>Code</th><th>For User</th><th>Status</th><th>Expires</th><th>Action</th></tr></thead><tbody>${rows.map(renderRow).join('')}</tbody></table>`
+    : '<p style="font-size:13px;color:var(--muted);">No active codes. Generate one above.</p>';
+
+  enrollEl.innerHTML = tbl(enroll);
+  resetEl.innerHTML  = tbl(reset);
 }
 
-function revokeCode(idx) {
-  if (!confirm('Revoke this access code?')) return;
-  const codes = getAccessCodes().filter(c => c.expiresAt > Date.now());
-  codes.splice(idx, 1);
-  saveAccessCodes(codes);
-  renderActiveCodes();
+function revokeCode(code) {
+  if (!confirm('Revoke code '+code+'?')) return;
+  saveCodes(getCodes().filter(c=>c.code!==code));
+  renderCodeLists();
 }
 
-// Access code gate for Add Student
-let accessGranted = false;
-
-function openStudentModalWithCheck() {
+// ─── ENROLL GATE (non-admin needs enrollment code to add student) ─────────────
+function openStudentGated() {
   const sess = currentSession();
-  if (sess.role === 'admin') {
-    // Admin never needs code
-    openStudentModal();
-    return;
-  }
-  // Staff needs a valid access code
-  if (accessGranted) {
-    openStudentModal();
-    return;
-  }
-  // Show access code modal
-  document.getElementById('access-code-input').value = '';
-  document.getElementById('access-code-error').style.display = 'none';
+  if (sess.role==='admin') { openStudentModal(); return; }
+  // Staff needs valid enrollment code
+  document.getElementById('ac-input').value = '';
+  document.getElementById('ac-error').style.display = 'none';
   document.getElementById('access-code-modal').classList.add('open');
-  setTimeout(() => document.getElementById('access-code-input').focus(), 100);
+  setTimeout(()=>document.getElementById('ac-input').focus(),100);
 }
 
-function closeAccessModal() {
-  document.getElementById('access-code-modal').classList.remove('open');
-}
-
-function verifyAccessCode() {
-  const entered = document.getElementById('access-code-input').value.trim().toUpperCase();
-  const errEl = document.getElementById('access-code-error');
-  if (entered.length !== 8) { errEl.textContent = 'Please enter a valid 8-character code.'; errEl.style.display='block'; return; }
-  const now = Date.now();
-  const codes = getAccessCodes();
-  const idx = codes.findIndex(c => c.code === entered && !c.used && c.expiresAt > now);
-  if (idx === -1) {
-    errEl.textContent = 'Invalid or expired code. Please ask admin for a new code.';
-    errEl.style.display = 'block';
-    return;
-  }
-  // Mark as used
+function verifyEnrollCode() {
+  const entered = document.getElementById('ac-input').value.trim().toUpperCase();
+  const errEl   = document.getElementById('ac-error');
+  if (entered.length!==8) { errEl.textContent='Please enter the full 8-character code.'; errEl.style.display='block'; return; }
+  const now   = Date.now();
+  const codes = getCodes();
+  const idx   = codes.findIndex(c=>c.code===entered && c.type==='enroll' && !c.used && c.expiresAt>now);
+  if (idx===-1) { errEl.textContent='Invalid, expired, or already-used code. Ask admin for a new code.'; errEl.style.display='block'; return; }
   codes[idx].used = true;
-  saveAccessCodes(codes);
-  accessGranted = true;
-  closeAccessModal();
+  saveCodes(codes);
+  document.getElementById('access-code-modal').classList.remove('open');
   openStudentModal();
-  // Reset grant after modal closes (single use per session open)
-  setTimeout(() => { accessGranted = false; }, 500);
-}
-
-// Override the Add Student button to use the gated version
-// (done by replacing onclick in HTML — handled in HTML section above)
-
-// Show/hide access code panel based on role
-function applyRoleUI() {
-  const sess = currentSession();
-  const acPanel = document.getElementById('access-code-panel');
-  const resetPanel = document.getElementById('admin-reset-panel');
-  if (acPanel) acPanel.style.display = sess.role === 'admin' ? 'block' : 'none';
-  if (resetPanel) resetPanel.style.display = 'none'; // always hidden until triggered
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
-applyRoleUI();
 renderDashboard();
 </script>
 </body>
 </html>
-
