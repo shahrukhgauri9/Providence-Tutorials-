@@ -371,10 +371,8 @@
 
     <div class="login-footer">
       <span class="lock-icon">🔒</span>This is a private system.<br>
-      Authorised personnel only.<br><br>
-      <strong style="color:var(--navy);">Default credentials:</strong><br>
-      User ID: <code>admin</code> &nbsp;|&nbsp; Password: <code>providence2025</code><br>
-      <span style="color:var(--red);font-size:10.5px;">(Change these after first login from Settings)</span>
+      Authorised personnel only.<br>
+      Contact your administrator if you cannot log in.
     </div>
   </div>
 
@@ -385,10 +383,10 @@
 function getUsers() {
   const stored = localStorage.getItem('pt_users');
   if (stored) return JSON.parse(stored);
-  // Default accounts — first run
+  // Default accounts — first run (passwords encoded with btoa)
   const defaults = [
-    { uid: 'admin', password: 'providence2025', role: 'admin', name: 'Administrator', active: true },
-    { uid: 'staff', password: 'staff123',        role: 'staff', name: 'Staff Member',   active: true }
+    { uid: 'admin', password: btoa('providence2025'), role: 'admin', name: 'Administrator', active: true },
+    { uid: 'staff', password: btoa('staff123'),        role: 'staff', name: 'Staff Member',   active: true }
   ];
   localStorage.setItem('pt_users', JSON.stringify(defaults));
   return defaults;
@@ -442,7 +440,8 @@ function doLogin() {
 
   setTimeout(() => {
     const users = getUsers();
-    const user  = users.find(u => u.uid === uid && u.password === pw && u.active);
+    // Support both plain text (old) and btoa-encoded (new) passwords
+    const user  = users.find(u => u.uid === uid && u.active && (u.password === pw || u.password === btoa(pw)));
 
     if (user) {
       // Success — reset lockout, store session
@@ -518,7 +517,7 @@ function doResetPassword() {
   // Check code
   const now   = Date.now();
   const codes = JSON.parse(localStorage.getItem('pt_codes')||'[]');
-  const idx   = codes.findIndex(c => c.code===code && c.type==='reset' && !c.used && c.expiresAt>now && (!c.targetUser || c.targetUser===uid));
+  const idx   = codes.findIndex(c => c.code===code && c.type==='reset' && !c.used && c.expiresAt>now && (!c.target || c.target===uid));
   if (idx===-1) {
     errEl.textContent='Invalid, expired, or already-used reset code. Please ask admin to generate a new one.';
     errEl.style.display='block';
@@ -532,8 +531,8 @@ function doResetPassword() {
   const u = users.find(x=>x.uid===uid);
   if (!u) { errEl.textContent='User ID not found.'; errEl.style.display='block'; return; }
 
-  // Apply reset
-  u.password = pw1;
+  // Apply reset — encode password same way as dashboard (btoa)
+  u.password = btoa(pw1);
   localStorage.setItem('pt_users', JSON.stringify(users));
   codes[idx].used = true;
   localStorage.setItem('pt_codes', JSON.stringify(codes));
