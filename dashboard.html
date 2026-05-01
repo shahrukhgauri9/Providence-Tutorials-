@@ -801,9 +801,24 @@
 
             <!-- STUDENTS -->
             <div class="page" id="pg-students">
-                <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+                <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; align-items:center;">
                     <button class="btn btn-primary" onclick="openStudentGated()">+ Add Student</button>
-                    <input id="student-search" placeholder="🔍 Search by name / class..." style="width:260px;" oninput="renderStudents()">
+                    <input id="student-search" placeholder="🔍 Search by name..." style="width:200px;" oninput="renderStudents()">
+                    <select id="student-class-filter" onchange="renderStudents()" style="min-width:130px;">
+                        <option value="">All Classes</option>
+                        <option value="Class 1">Class 1</option>
+                        <option value="Class 2">Class 2</option>
+                        <option value="Class 3">Class 3</option>
+                        <option value="Class 4">Class 4</option>
+                        <option value="Class 5">Class 5</option>
+                        <option value="Class 6">Class 6</option>
+                        <option value="Class 7">Class 7</option>
+                        <option value="Class 8">Class 8</option>
+                        <option value="Class 9">Class 9</option>
+                        <option value="Class 10">Class 10</option>
+                        <option value="Class 11">Class 11</option>
+                        <option value="Class 12">Class 12</option>
+                    </select>
                     <span class="session-badge" id="student-session-badge">All Sessions</span>
                 </div>
                 <div class="panel">
@@ -1113,6 +1128,67 @@
             </div><!-- /pg-settings -->
         </div><!-- /content -->
     </div><!-- /main -->
+
+    <!-- INDIVIDUAL PROMOTE MODAL -->
+    <div class="modal-overlay" id="promote-modal">
+        <div class="modal" style="max-width:520px;">
+            <div class="modal-header">
+                <h3>⬆️ Promote Student to Next Session</h3>
+                <button class="modal-close" onclick="document.getElementById('promote-modal').classList.remove('open')">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="pm-student-id">
+
+                <!-- Student summary -->
+                <div id="pm-summary" style="background:#f9f6ef;border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px;font-size:13px;"></div>
+
+                <!-- Due warning -->
+                <div id="pm-due-warn" style="display:none;background:#fff5f5;border:1px solid #f5c6cb;border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#842029;">
+                    ⚠️ This student has <strong id="pm-due-amount"></strong> pending due. It will be <strong>carried forward</strong> as Previous Due in the new session.
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Promote to Session *</label>
+                        <select id="pm-target-session">
+                            <option value="">— Select target session —</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>New Class after Promotion</label>
+                        <select id="pm-new-class">
+                            <option value="Class 1">Class 1</option>
+                            <option value="Class 2">Class 2</option>
+                            <option value="Class 3">Class 3</option>
+                            <option value="Class 4">Class 4</option>
+                            <option value="Class 5">Class 5</option>
+                            <option value="Class 6">Class 6</option>
+                            <option value="Class 7">Class 7</option>
+                            <option value="Class 8">Class 8</option>
+                            <option value="Class 9">Class 9</option>
+                            <option value="Class 10">Class 10</option>
+                            <option value="Class 11">Class 11</option>
+                            <option value="Class 12">Class 12</option>
+                            <option value="Passed Out">Passed Out</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>New Joining Date *</label>
+                        <input type="date" id="pm-joining-date">
+                    </div>
+                    <div class="form-group">
+                        <label>New Monthly Fee (₹)</label>
+                        <input type="number" id="pm-monthly-fee" placeholder="Leave blank to keep same">
+                    </div>
+                </div>
+                <div id="pm-error" style="display:none;background:#fff0f0;border:1px solid #f5c6cb;border-radius:8px;padding:9px 13px;font-size:12.5px;color:#842029;margin-top:8px;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="document.getElementById('promote-modal').classList.remove('open')">Cancel</button>
+                <button class="btn btn-gold" onclick="doPromoteStudent()">⬆️ Confirm Promotion</button>
+            </div>
+        </div>
+    </div>
 
     <!-- ACCESS CODE MODAL -->
     <div class="modal-overlay" id="ac-modal">
@@ -1438,9 +1514,12 @@
         // ─── STUDENTS ─────────────────────────────────────────────────────────────
         function renderStudents() {
             const q = (document.getElementById('student-search').value || '').toLowerCase();
+            const cf = document.getElementById('student-class-filter') ? document.getElementById('student-class-filter').value : '';
             const activeStudents = getActiveSessionStudents();
-            const filtered = activeStudents.filter(s => s.name.toLowerCase().includes(q) || s.class.toLowerCase()
-                .includes(q));
+            const filtered = activeStudents.filter(s =>
+                (s.name.toLowerCase().includes(q) || s.class.toLowerCase().includes(q)) &&
+                (!cf || s.class === cf)
+            );
             const tb = document.getElementById('student-table');
             document.getElementById('student-session-badge').textContent = activeSession || 'All Sessions';
             if (!filtered.length) {
@@ -1460,8 +1539,9 @@
                 <td>₹${s.monthlyFee.toLocaleString('en-IN')}</td>
                 <td style="color:var(--green)">₹${getDeposited(s.id).toLocaleString('en-IN')}</td>
                 <td>${getTotalDueForStudent(s)>0?`<span class="badge badge-red">₹${getTotalDueForStudent(s).toLocaleString('en-IN')}</span>`:`<span class="badge badge-green">NIL</span>`}</td>
-                <td>
+                <td style="display:flex;gap:4px;flex-wrap:wrap;">
                     <button class="btn btn-outline btn-sm" onclick="editStudent('${s.id}')">✏️</button>
+                    <button class="btn btn-gold btn-sm" onclick="showPromoteModal('${s.id}')" title="Promote to next session">⬆️ Promote</button>
                     <button class="btn btn-red btn-sm" onclick="deleteStudent('${s.id}')">🗑️</button>
                 </td>
             </tr>`).join('');
@@ -1911,6 +1991,126 @@
             saveAll();
             refreshSessionSelector();
             renderSessionsPage();
+        }
+
+        // ─── INDIVIDUAL STUDENT PROMOTION ──────────────────────────────────────────
+        function showPromoteModal(studentId) {
+            const s = students.find(x => x.id === studentId);
+            if (!s) return;
+
+            document.getElementById('pm-student-id').value = studentId;
+            document.getElementById('pm-error').style.display = 'none';
+
+            // Summary box
+            const due = getTotalDueForStudent(s);
+            document.getElementById('pm-summary').innerHTML =
+                '<strong>' + s.name + '</strong> &nbsp;|&nbsp; ' + s.class + (s.section ? ' – ' + s.section : '') +
+                ' &nbsp;|&nbsp; Session: <strong>' + (s.session || '—') + '</strong>' +
+                ' &nbsp;|&nbsp; Scholar No: <strong>' + (s.scholarNo || '—') + '</strong>';
+
+            // Due warning
+            const dueWarn = document.getElementById('pm-due-warn');
+            if (due > 0) {
+                document.getElementById('pm-due-amount').textContent = '₹' + due.toLocaleString('en-IN');
+                dueWarn.style.display = 'block';
+            } else {
+                dueWarn.style.display = 'none';
+            }
+
+            // Populate target session (exclude current session)
+            const pmSel = document.getElementById('pm-target-session');
+            pmSel.innerHTML = '<option value="">— Select target session —</option>' +
+                sessions.filter(sess => sess.id !== s.session)
+                    .map(sess => '<option value="' + sess.id + '">' + sess.id + '</option>').join('');
+
+            // Pre-select next class
+            const classNum = parseInt(s.class.replace(/\D/g, '')) || 0;
+            const nextClass = classNum < 12 ? 'Class ' + (classNum + 1) : 'Passed Out';
+            document.getElementById('pm-new-class').value = nextClass;
+
+            // Default joining date = today
+            document.getElementById('pm-joining-date').value = new Date().toISOString().split('T')[0];
+
+            // Pre-fill monthly fee
+            document.getElementById('pm-monthly-fee').value = s.monthlyFee;
+
+            document.getElementById('promote-modal').classList.add('open');
+        }
+
+        function doPromoteStudent() {
+            const studentId = document.getElementById('pm-student-id').value;
+            const targetSession = document.getElementById('pm-target-session').value;
+            const newClass = document.getElementById('pm-new-class').value;
+            const newJoining = document.getElementById('pm-joining-date').value;
+            const newFeeRaw = document.getElementById('pm-monthly-fee').value;
+            const errEl = document.getElementById('pm-error');
+            errEl.style.display = 'none';
+
+            if (!targetSession) { errEl.textContent = 'Please select a target session.'; errEl.style.display = 'block'; return; }
+            if (!newJoining)    { errEl.textContent = 'Please enter a new joining date.'; errEl.style.display = 'block'; return; }
+
+            const s = students.find(x => x.id === studentId);
+            if (!s) return;
+
+            // Check not already promoted to this session
+            const alreadyExists = students.find(x =>
+                x.name === s.name && x.father === s.father && x.session === targetSession
+            );
+            if (alreadyExists) {
+                errEl.textContent = 'This student already exists in the target session (' + targetSession + ').';
+                errEl.style.display = 'block'; return;
+            }
+
+            // Carry forward due fee as previousDue in new session
+            const carryDue = getTotalDueForStudent(s);
+            const newFee = newFeeRaw ? parseFloat(newFeeRaw) : s.monthlyFee;
+
+            // Generate new scholar number for new session + class
+            const newScholarNo = generateScholarNumber(newClass, targetSession);
+
+            // Create new student record for the new session
+            const newStudent = {
+                id: 's' + nextStudentId++,
+                scholarNo: newScholarNo,
+                name: s.name,
+                father: s.father,
+                mother: s.mother || '',
+                class: newClass,
+                section: s.section || '',
+                session: targetSession,
+                school: s.school || '',
+                address: s.address || '',
+                fatherPh: s.fatherPh || '',
+                motherPh: s.motherPh || '',
+                wa: s.wa || '',
+                joining: newJoining,
+                monthlyFee: newFee,
+                previousDue: carryDue,
+                promotionHistory: [
+                    ...(s.promotionHistory || []),
+                    {
+                        from: s.session,
+                        to: targetSession,
+                        fromClass: s.class,
+                        toClass: newClass,
+                        date: new Date().toISOString().split('T')[0],
+                        carryDue: carryDue
+                    }
+                ],
+                payments: []
+            };
+
+            students.push(newStudent);
+            saveAll();
+            document.getElementById('promote-modal').classList.remove('open');
+            renderStudents();
+            alert('✅ ' + s.name + ' promoted successfully to ' + targetSession + ' (' + newClass + ')!
+
+' +
+                (carryDue > 0 ? '📌 Previous due of ₹' + carryDue.toLocaleString('en-IN') + ' has been carried forward.
+
+' : '') +
+                'New Scholar Number: ' + newScholarNo);
         }
 
         function promoteStudents() {
