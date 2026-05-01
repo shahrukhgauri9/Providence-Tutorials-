@@ -824,7 +824,7 @@
                 <div class="panel">
                     <div class="panel-body" style="padding:0;">
                         <table>
-                            <thead><tr><th>#</th><th>Scholar No.</th><th>Name</th><th>Father's Name</th><th>Class</th><th>Session</th><th>School</th><th>Joining Date</th><th>Monthly Fee</th><th>Deposited</th><th>Due</th><th>Actions</th></tr></thead>
+                            <thead><tr><th>#</th><th>Scholar No.</th><th>Name</th><th>Father's Name</th><th>Class</th><th>Session</th><th>School</th><th>Joining Date</th><th>Monthly Fee</th><th>Deposit</th></tr></thead>
                             <tbody id="student-table"></tbody>
                         </table>
                     </div>
@@ -873,10 +873,10 @@
                         <div class="panel" style="margin-top:16px; background:#f9f6ef;">
                             <div class="panel-body">
                                 <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:16px; text-align:center;">
-                                    <div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Monthly Fee</div><div style="font-size:20px;font-weight:700;color:var(--navy);" id="info-monthly">₹0</div></div>
-                                    <div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Total Deposited</div><div style="font-size:20px;font-weight:700;color:var(--green);" id="info-deposited">₹0</div></div>
-                                    <div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Current Due</div><div style="font-size:20px;font-weight:700;color:var(--red);" id="info-due">₹0</div></div>
-                                    <div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Advance Balance</div><div style="font-size:20px;font-weight:700;color:var(--blue);" id="info-advance">₹0</div></div>
+                                    <div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Monthly Fee</div><div style="font-size:20px;font-weight:700;color:var(--navy);" id="display-monthly-fee">₹0</div></div>
+                                    <div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Total Deposited</div><div style="font-size:20px;font-weight:700;color:var(--green);" id="display-total-deposited">₹0</div></div>
+                                    <div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Current Due</div><div style="font-size:20px;font-weight:700;color:var(--red);" id="display-current-due">₹0</div></div>
+                                    <div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Advance Balance</div><div style="font-size:20px;font-weight:700;color:var(--navy);" id="display-advance-balance">₹0</div></div>
                                 </div>
                             </div>
                         </div>
@@ -987,7 +987,7 @@
                 </div>
             </div>
 
-            <!-- ══════════ NEW: SESSIONS PAGE ══════════ -->
+            <!-- SESSIONS PAGE -->
             <div class="page" id="pg-sessions">
                 <div class="panel">
                     <div class="panel-head">
@@ -999,1614 +999,351 @@
                         <div id="sessions-list"></div>
                     </div>
                 </div>
-                <div class="panel">
-                    <div class="panel-head"><h3>🔄 Promote Students to Next Session</h3></div>
-                    <div class="panel-body">
-                        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Promote all students from the current active session to a new session. Their class will increment by 1, previous dues will be carried forward, and new scholar numbers will be assigned.</p>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label>Target Session</label>
-                                <select id="promote-target-session">
-                                    <option value="">— Select target session —</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>New Joining Date</label>
-                                <input type="date" id="promote-joining-date">
-                            </div>
-                        </div>
-                        <div style="margin-top:14px;">
-                            <button class="btn btn-gold" onclick="promoteStudents()">🔄 Promote All Students</button>
-                        </div>
-                    </div>
-                </div>
             </div>
 
-            <!-- ══════════ SETTINGS PAGE ══════════ -->
+            <!-- SETTINGS PAGE -->
             <div class="page" id="pg-settings">
-                <div class="tab-bar">
-                    <div class="s-tab active" onclick="openSTab('st-users',this)">👤 User Accounts</div>
-                    <div class="s-tab" onclick="openSTab('st-adduser',this)">➕ Add / Edit User</div>
-                    <div class="s-tab" id="codes-tab-btn" onclick="openSTab('st-codes',this)">🎟️ Access Codes</div>
-                    <div class="s-tab" onclick="openSTab('st-mypw',this)">🔑 My Password</div>
-                </div>
-
-                <!-- TAB: USER ACCOUNTS -->
-                <div class="settings-tab active-tab" id="st-users">
-                    <div class="panel">
-                        <div class="panel-head">
-                            <h3>👤 All User Accounts</h3>
-                            <button class="btn btn-primary btn-sm" onclick="openSTab('st-adduser',document.querySelectorAll('.s-tab')[1]);clearUserForm()">➕ Add New User</button>
-                        </div>
-                        <div class="panel-body" style="padding:0;">
-                            <table><thead><tr><th>User ID</th><th>Name</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
-                                <tbody id="users-table"></tbody></table>
-                        </div>
-                    </div>
-                    <div class="panel" id="inline-reset-panel" style="display:none;border:2px solid var(--gold);">
-                        <div class="panel-head" style="background:#fffbf0;">
-                            <h3>🔑 Reset Password for: <span id="reset-for-uid" style="color:var(--gold);font-family:monospace;"></span></h3>
-                            <button class="btn btn-outline btn-sm" onclick="document.getElementById('inline-reset-panel').style.display='none'">✕ Cancel</button>
-                        </div>
-                        <div class="panel-body">
-                            <div style="background:#fff5cc;border:1px solid #e6cc00;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;color:#7a5c00;">⚠️ You are setting a new password for this user.</div>
-                            <div class="form-grid">
-                                <div class="form-group"><label>New Password*</label><input type="password" id="direct-reset-pw" placeholder="Min 6 characters"></div>
-                                <div class="form-group"><label>Confirm New Password*</label><input type="password" id="direct-reset-pw2" placeholder="Repeat password"></div>
-                            </div>
-                            <div style="margin-top:14px;"><button class="btn btn-gold" onclick="doDirectReset()">🔑 Set New Password</button></div>
-                        </div>
+                <div class="panel">
+                    <div class="panel-head"><h3>⚙️ Settings</h3></div>
+                    <div class="panel-body">
+                        <p style="font-size:13px;color:var(--muted);">Settings page content will be added here.</p>
                     </div>
                 </div>
+            </div>
 
-                <!-- TAB: ADD / EDIT USER -->
-                <div class="settings-tab" id="st-adduser">
-                    <div class="panel">
-                        <div class="panel-head"><h3 id="user-form-title">➕ Add New User</h3></div>
-                        <div class="panel-body">
-                            <input type="hidden" id="edit-uid-orig">
-                            <div class="form-grid">
-                                <div class="form-group"><label>User ID *</label><input type="text" id="u-uid" placeholder="e.g. teacher1" autocomplete="off"><span class="help-text">Lowercase, no spaces.</span></div>
-                                <div class="form-group"><label>Full Name *</label><input type="text" id="u-name" placeholder="Display name"></div>
-                                <div class="form-group"><label>Password *</label><input type="password" id="u-pw" placeholder="Min 6 characters" autocomplete="new-password"><span class="help-text" id="u-pw-hint">Required for new users.</span></div>
-                                <div class="form-group"><label>Role</label><select id="u-role"><option value="admin">Admin (full access)</option><option value="staff">Staff (view & collect fee only)</option></select></div>
-                            </div>
-                            <div style="margin-top:16px;display:flex;gap:10px;">
-                                <button class="btn btn-primary" onclick="saveUser()">💾 Save User</button>
-                                <button class="btn btn-outline" onclick="clearUserForm()">🔄 Reset Form</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- TAB: ACCESS CODES -->
-                <div class="settings-tab" id="st-codes">
-                    <div class="panel">
-                        <div class="panel-head"><h3>🎟️ Student Enrollment Codes</h3><span style="font-size:12px;color:var(--muted);">Single-use · 24 hr expiry</span></div>
-                        <div class="panel-body">
-                            <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Staff must enter this code before adding a new student.</p>
-                            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
-                                <button class="btn btn-primary" onclick="generateCode('enroll')">🎟️ Generate Enrollment Code</button>
-                                <div id="enroll-code-display" style="display:none;background:#f0f7ff;border:2px solid #4a8ad4;border-radius:10px;padding:10px 22px;font-family:monospace;font-size:24px;font-weight:700;color:var(--navy);letter-spacing:5px;"></div>
-                                <button id="enroll-copy-btn" style="display:none;" class="btn btn-outline btn-sm" onclick="copyCode('enroll-code-display','enroll-copy-btn')">📋 Copy</button>
-                            </div>
-                            <div class="section-title">Active Enrollment Codes</div>
-                            <div id="enroll-codes-list"><p style="font-size:13px;color:var(--muted);">No active codes yet.</p></div>
-                        </div>
-                    </div>
-                    <div class="panel">
-                        <div class="panel-head"><h3>🔐 Password Reset Codes</h3><span style="font-size:12px;color:var(--muted);">Single-use · 2 hr expiry</span></div>
-                        <div class="panel-body">
-                            <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Generate a reset code for users who forget their password.</p>
-                            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
-                                <div class="form-group" style="margin:0;"><label>For which user?</label><select id="reset-code-user" style="min-width:200px;margin-top:4px;"></select></div>
-                                <button class="btn btn-gold" onclick="generateCode('reset')" style="margin-top:20px;">🔐 Generate Reset Code</button>
-                                <div id="reset-code-display" style="display:none;background:#fffbf0;border:2px solid var(--gold);border-radius:10px;padding:10px 22px;font-family:monospace;font-size:24px;font-weight:700;color:var(--navy);letter-spacing:5px;"></div>
-                                <button id="reset-copy-btn" style="display:none;" class="btn btn-outline btn-sm" onclick="copyCode('reset-code-display','reset-copy-btn')">📋 Copy</button>
-                            </div>
-                            <div class="section-title">Active Reset Codes</div>
-                            <div id="reset-codes-list"><p style="font-size:13px;color:var(--muted);">No active codes yet.</p></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- TAB: MY PASSWORD -->
-                <div class="settings-tab" id="st-mypw">
-                    <div class="panel">
-                        <div class="panel-head"><h3>🔑 Change My Password</h3></div>
-                        <div class="panel-body">
-                            <div class="form-grid">
-                                <div class="form-group"><label>Current Password</label><input type="password" id="cp-old" placeholder="Enter current password"></div>
-                                <div class="form-group"><label>New Password</label><input type="password" id="cp-new" placeholder="Min 6 characters"></div>
-                                <div class="form-group"><label>Confirm New Password</label><input type="password" id="cp-confirm" placeholder="Repeat new password"></div>
-                            </div>
-                            <div id="pw-change-msg" style="display:none;margin-top:10px;padding:10px 14px;border-radius:8px;font-size:13px;"></div>
-                            <div style="margin-top:14px;"><button class="btn btn-gold" onclick="changeMyPassword()">🔑 Update My Password</button></div>
-                        </div>
-                    </div>
-                </div>
-            </div><!-- /pg-settings -->
-        </div><!-- /content -->
-    </div><!-- /main -->
-
-    <!-- INDIVIDUAL PROMOTE MODAL -->
-    <div class="modal-overlay" id="promote-modal">
-        <div class="modal" style="max-width:520px;">
-            <div class="modal-header">
-                <h3>⬆️ Promote Student to Next Session</h3>
-                <button class="modal-close" onclick="document.getElementById('promote-modal').classList.remove('open')">✕</button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="pm-student-id">
-
-                <!-- Student summary -->
-                <div id="pm-summary" style="background:#f9f6ef;border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px;font-size:13px;"></div>
-
-                <!-- Due warning -->
-                <div id="pm-due-warn" style="display:none;background:#fff5f5;border:1px solid #f5c6cb;border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#842029;">
-                    ⚠️ This student has <strong id="pm-due-amount"></strong> pending due. It will be <strong>carried forward</strong> as Previous Due in the new session.
-                </div>
-
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Promote to Session *</label>
-                        <select id="pm-target-session">
-                            <option value="">— Select target session —</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>New Class after Promotion</label>
-                        <select id="pm-new-class">
-                            <option value="Class 1">Class 1</option>
-                            <option value="Class 2">Class 2</option>
-                            <option value="Class 3">Class 3</option>
-                            <option value="Class 4">Class 4</option>
-                            <option value="Class 5">Class 5</option>
-                            <option value="Class 6">Class 6</option>
-                            <option value="Class 7">Class 7</option>
-                            <option value="Class 8">Class 8</option>
-                            <option value="Class 9">Class 9</option>
-                            <option value="Class 10">Class 10</option>
-                            <option value="Class 11">Class 11</option>
-                            <option value="Class 12">Class 12</option>
-                            <option value="Passed Out">Passed Out</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>New Joining Date *</label>
-                        <input type="date" id="pm-joining-date">
-                    </div>
-                    <div class="form-group">
-                        <label>New Monthly Fee (₹)</label>
-                        <input type="number" id="pm-monthly-fee" placeholder="Leave blank to keep same">
-                    </div>
-                </div>
-                <div id="pm-error" style="display:none;background:#fff0f0;border:1px solid #f5c6cb;border-radius:8px;padding:9px 13px;font-size:12.5px;color:#842029;margin-top:8px;"></div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" onclick="document.getElementById('promote-modal').classList.remove('open')">Cancel</button>
-                <button class="btn btn-gold" onclick="doPromoteStudent()">⬆️ Confirm Promotion</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ACCESS CODE MODAL -->
-    <div class="modal-overlay" id="ac-modal">
-        <div class="modal" style="max-width:420px;">
-            <div class="modal-header">
-                <h3>🎟️ Enter Enrollment Code</h3>
-                <button class="modal-close" onclick="document.getElementById('ac-modal').classList.remove('open')">✕</button>
-            </div>
-            <div class="modal-body">
-                <p style="font-size:13px;color:var(--muted);margin-bottom:18px;">Adding a new student requires a one-time <strong>Enrollment Code</strong> from the admin.</p>
-                <div class="form-group">
-                    <label>Enrollment Code</label>
-                    <input type="text" id="ac-input" maxlength="8" placeholder="8-character code" style="font-family:monospace;font-size:22px;letter-spacing:5px;text-align:center;text-transform:uppercase;padding:14px;" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')" onkeydown="if(event.key==='Enter')verifyEnrollCode()">
-                </div>
-                <div id="ac-error" style="display:none;background:#fff0f0;border:1px solid #f5c6cb;border-radius:8px;padding:9px 13px;font-size:12.5px;color:#842029;margin-top:8px;"></div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" onclick="document.getElementById('ac-modal').classList.remove('open')">Cancel</button>
-                <button class="btn btn-primary" onclick="verifyEnrollCode()">✅ Verify & Open Form</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- STUDENT MODAL -->
-    <div class="modal-overlay" id="student-modal">
-        <div class="modal">
-            <div class="modal-header">
-                <h3 id="student-modal-title">Add New Student</h3>
-                <button class="modal-close" onclick="closeStudentModal()">✕</button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="edit-student-id">
-                <div class="form-grid">
-                    <div class="form-group"><label>Student Name*</label><input type="text" id="s-name" placeholder="Full name"></div>
-                    <div class="form-group"><label>Father's Name*</label><input type="text" id="s-father" placeholder="Father's name"></div>
-                    <div class="form-group"><label>Mother's Name</label><input type="text" id="s-mother" placeholder="Mother's name"></div>
-                    <div class="form-group"><label>Class*</label><select id="s-class" onchange="previewScholarNumber()"><option>Class 1</option><option>Class 2</option><option>Class 3</option><option>Class 4</option><option>Class 5</option><option>Class 6</option><option>Class 7</option><option>Class 8</option><option>Class 9</option><option>Class 10</option><option>Class 11</option><option>Class 12</option></select></div>
-                    <div class="form-group"><label>Section</label><input type="text" id="s-section" placeholder="A / B / C"></div>
-                    <div class="form-group">
-                        <label>Scholar Number</label>
-                        <input type="text" id="s-scholar" placeholder="Auto-generated" readonly style="background:#f5f5f5;color:var(--muted);font-family:monospace;font-size:14px;font-weight:700;letter-spacing:1px;">
-                        <span class="help-text">6-digit: YY + 4-digit serial. Auto-assigned on save.</span>
-                    </div>
-                    <div class="form-group"><label>Session*</label><select id="s-session"></select></div>
-                    <div class="form-group"><label>School Name</label><input type="text" id="s-school" placeholder="School name"></div>
-                    <div class="form-group full"><label>Residential Address</label><input type="text" id="s-address" placeholder="Full address"></div>
-                    <div class="form-group"><label>Father's Contact No.</label><input type="tel" id="s-father-ph" placeholder="10-digit mobile"></div>
-                    <div class="form-group"><label>Mother's Contact No.</label><input type="tel" id="s-mother-ph" placeholder="10-digit mobile"></div>
-                    <div class="form-group"><label>WhatsApp Number</label><input type="tel" id="s-wa" placeholder="WhatsApp number"></div>
-                    <div class="form-group"><label>Joining Date*</label><input type="date" id="s-joining"></div>
-                    <div class="form-group"><label>Monthly Fee (₹)*</label><input type="number" id="s-fee" placeholder="e.g. 1500"></div>
-                    <div class="form-group"><label>Previous Due (₹)</label><input type="number" id="s-prev-due" placeholder="0" value="0"><span class="help-text">Outstanding from previous session (if any)</span></div>
-                    <div class="form-group"><label>Initial Deposit (₹)</label><input type="number" id="s-deposit" placeholder="0" value="0"></div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" onclick="closeStudentModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="saveStudent()">Save Student</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- NEW: CREATE SESSION MODAL -->
-    <div class="modal-overlay" id="session-modal">
-        <div class="modal" style="max-width:450px;">
-            <div class="modal-header">
-                <h3>📅 Create New Session</h3>
-                <button class="modal-close" onclick="document.getElementById('session-modal').classList.remove('open')">✕</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-grid">
-                    <div class="form-group"><label>Start Year*</label><input type="number" id="sess-start-year" placeholder="2025" min="2020" max="2100"></div>
-                    <div class="form-group"><label>End Year*</label><input type="number" id="sess-end-year" placeholder="2026" min="2020" max="2100"></div>
-                </div>
-                <div id="sess-error" style="display:none;background:#fff0f0;border:1px solid #f5c6cb;border-radius:8px;padding:9px 13px;font-size:12.5px;color:#842029;margin-top:10px;"></div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" onclick="document.getElementById('session-modal').classList.remove('open')">Cancel</button>
-                <button class="btn btn-primary" onclick="createSession()">✅ Create Session</button>
-            </div>
         </div>
     </div>
 
     <script>
-        // ═══════════════════════════════════════════════════════════════════════════
-        // DATA LAYER (UPGRADED)
-        // ═══════════════════════════════════════════════════════════════════════════
-        let students = JSON.parse(localStorage.getItem('pt_students') || '[]');
-        let payments = JSON.parse(localStorage.getItem('pt_payments') || '[]');
-        let sessions = JSON.parse(localStorage.getItem('pt_sessions') || '[]');
-        let activeSession = localStorage.getItem('pt_activeSession') || '';
-        let nextStudentId = parseInt(localStorage.getItem('pt_sid') || '1');
-        let nextReceiptId = parseInt(localStorage.getItem('pt_rid') || '1001');
+        // ════════════════════════════════════════════════════════════
+        // MAIN INITIALIZATION & DROPDOWN POPULATION FUNCTIONS
+        // ════════════════════════════════════════════════════════════
 
-        // ─── MIGRATION: Ensure all students have a session field ──────────────────
-        function migrateData() {
-            let changed = false;
-            // Create default session if none exist
-            if (!sessions.length) {
-                const now = new Date();
-                const yr = now.getFullYear();
-                const month = now.getMonth(); // 0-based
-                // Academic session typically starts in April
-                const startYr = month < 3 ? yr - 1 : yr;
-                const endYr = startYr + 1;
-                const defaultSession = {
-                    id: startYr + '-' + String(endYr).slice(-2),
-                    startYear: startYr,
-                    endYear: endYr,
-                    created: new Date().toISOString()
-                };
-                sessions.push(defaultSession);
-                activeSession = defaultSession.id;
-                changed = true;
+        // Initialize dropdowns when page loads
+        function initializeDropdowns() {
+            loadSessions();
+            loadStudentData();
+            loadPaymentMonths();
+            loadPaymentRecords();
+            loadReceiptRecords();
+            updateTodayDate();
+        }
+
+        // Update today's date
+        function updateTodayDate() {
+            const today = new Date();
+            const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+            document.getElementById('today-date').textContent = today.toLocaleDateString('en-US', options);
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // SESSION MANAGEMENT
+        // ════════════════════════════════════════════════════════════
+
+        function switchActiveSession() {
+            const sessionId = document.getElementById('active-session-select').value;
+            if (sessionId) {
+                localStorage.setItem('activeSession', sessionId);
+                renderStudents();
+                loadStudentData();
+                console.log('✅ Session switched to:', sessionId);
             }
-            // Assign session to students that lack it
-            students.forEach(s => {
-                if (!s.session) {
-                    s.session = activeSession || sessions[0].id;
-                    changed = true;
-                }
-                if (!s.previousDue && s.previousDue !== 0) {
-                    s.previousDue = 0;
-                    changed = true;
-                }
-                if (!s.promotionHistory) {
-                    s.promotionHistory = [];
-                    changed = true;
-                }
+        }
+
+        function loadSessions() {
+            const sessions = JSON.parse(localStorage.getItem('sessions')) || [];
+            const select = document.getElementById('active-session-select');
+            const activeSession = localStorage.getItem('activeSession');
+            
+            select.innerHTML = '<option value="">— Select —</option>';
+            sessions.forEach(session => {
+                const opt = document.createElement('option');
+                opt.value = session.id;
+                opt.text = session.name;
+                if (session.id === activeSession) opt.selected = true;
+                select.appendChild(opt);
             });
-            if (changed) saveAll();
-        }
 
-        function saveAll() {
-            localStorage.setItem('pt_students', JSON.stringify(students));
-            localStorage.setItem('pt_payments', JSON.stringify(payments));
-            localStorage.setItem('pt_sessions', JSON.stringify(sessions));
-            localStorage.setItem('pt_activeSession', activeSession);
-            localStorage.setItem('pt_sid', nextStudentId);
-            localStorage.setItem('pt_rid', nextReceiptId);
-            saveAutoBackup();
-        }
-
-        // Alias for backward compatibility
-        function save() { saveAll(); }
-
-        // ─── ACTIVE SESSION HELPERS ───────────────────────────────────────────────
-        function getActiveSessionStudents() {
-            if (!activeSession) return students;
-            return students.filter(s => s.session === activeSession);
-        }
-
-        function getActiveSessionPayments() {
-            const activeStudentIds = new Set(getActiveSessionStudents().map(s => s.id));
-            return payments.filter(p => activeStudentIds.has(p.studentId));
-        }
-
-        // ─── SCHOLAR NUMBER (NEW: 6-digit, YY + 4-digit serial per class per session) ──
-        function generateScholarNumber(cls, sessionId) {
-            const sess = sessions.find(s => s.id === sessionId);
-            const yy = sess ? String(sess.startYear).slice(-2) : String(new Date().getFullYear()).slice(-2);
-            // Find highest serial for this class + session
-            const existing = students
-                .filter(s => s.class === cls && s.session === sessionId && s.scholarNo && s.scholarNo.length === 6)
-                .map(s => parseInt(String(s.scholarNo).slice(2)) || 0);
-            const serial = existing.length ? Math.max(...existing) + 1 : 1;
-            return yy + String(serial).padStart(4, '0');
-        }
-
-        function previewScholarNumber() {
-            const cls = document.getElementById('s-class').value;
-            const editId = document.getElementById('edit-student-id').value;
-            if (editId) return;
-            const sessionId = document.getElementById('s-session').value || activeSession;
-            document.getElementById('s-scholar').value = generateScholarNumber(cls, sessionId) + ' (preview)';
-        }
-
-        // ─── NAVIGATION ───────────────────────────────────────────────────────────
-        const pageTitles = {
-            dashboard: 'Dashboard',
-            students: 'Students',
-            fees: 'Collect Fee',
-            records: 'Fee Records',
-            reminders: 'WhatsApp Reminders',
-            receipt: 'Print Receipt',
-            backup: 'Backup & Restore',
-            sessions: 'Sessions',
-            settings: 'Settings & User Management'
-        };
-
-        function showPage(id) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            const pg = document.getElementById('pg-' + id);
-            if (pg) pg.classList.add('active');
-            document.querySelectorAll('.nav-item').forEach(n => {
-                if (n.getAttribute('onclick') === `showPage('${id}')`) n.classList.add('active');
-            });
-            document.getElementById('page-title').textContent = pageTitles[id] || id;
-
-            if (id === 'dashboard') renderDashboard();
-            if (id === 'students') renderStudents();
-            if (id === 'fees') populateFeeDropdowns();
-            if (id === 'records') { populateMonthFilter();
-                renderRecords(); }
-            if (id === 'reminders') renderReminders();
-            if (id === 'receipt') populateReceiptDropdowns();
-            if (id === 'backup') renderBackupPage();
-            if (id === 'sessions') renderSessionsPage();
-            if (id === 'settings') renderSettingsPage();
-        }
-
-        // ─── DATE ─────────────────────────────────────────────────────────────────
-        document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-IN', { weekday: 'long',
-            year: 'numeric', month: 'long', day: 'numeric' });
-        document.getElementById('fee-date').value = new Date().toISOString().split('T')[0];
-        const m = new Date();
-        document.getElementById('fee-month').value = m.getFullYear() + '-' + (String(m.getMonth() + 1).padStart(2,
-        '0'));
-
-        // ─── STUDENT HELPERS ──────────────────────────────────────────────────────
-        function getDeposited(id) {
-            return payments.filter(p => p.studentId === id).reduce((s, p) => s + p.amount, 0);
-        }
-
-        // ─── NEW: MONTH-WISE FEE CALCULATION ──────────────────────────────────────
-        function getDueMonths(student) {
-            // Due starts from the month AFTER joining
-            const joining = new Date(student.joining);
-            const now = new Date();
-            // First due month is the month after joining
-            const firstDueMonth = new Date(joining.getFullYear(), joining.getMonth() + 1, 1);
-            if (firstDueMonth > now) return 0;
-            // Count months from first due month to current month (inclusive)
-            const months = (now.getFullYear() - firstDueMonth.getFullYear()) * 12 +
-                (now.getMonth() - firstDueMonth.getMonth()) + 1;
-            return Math.max(0, months);
-        }
-
-        function getTotalDueForStudent(student) {
-            const dueMonths = getDueMonths(student);
-            const totalFee = dueMonths * student.monthlyFee;
-            const deposited = getDeposited(student.id);
-            const rawDue = totalFee - deposited + (student.previousDue || 0);
-            return Math.max(0, rawDue);
-        }
-
-        function getAdvanceBalance(student) {
-            const dueMonths = getDueMonths(student);
-            const totalFee = dueMonths * student.monthlyFee;
-            const deposited = getDeposited(student.id);
-            const rawDue = totalFee - deposited + (student.previousDue || 0);
-            if (rawDue < 0) return Math.abs(rawDue);
-            return 0;
-        }
-
-        function getNextPaymentDate(student) {
-            const dueMonths = getDueMonths(student);
-            const deposited = getDeposited(student.id);
-            const totalFee = dueMonths * student.monthlyFee;
-            const rawDue = totalFee - deposited + (student.previousDue || 0);
-            const advanceMonths = rawDue < 0 ? Math.floor(Math.abs(rawDue) / student.monthlyFee) : 0;
-            const joining = new Date(student.joining);
-            const firstDueMonth = new Date(joining.getFullYear(), joining.getMonth() + 1, 1);
-            const coveredMonths = dueMonths + advanceMonths;
-            const nextDueDate = new Date(firstDueMonth);
-            nextDueDate.setMonth(nextDueDate.getMonth() + coveredMonths);
-            return nextDueDate.toISOString().split('T')[0];
-        }
-
-        function getMonthsCoveredByPayment(student, paymentAmount) {
-            // How many months does this payment cover (including advance)?
-            const dueMonths = getDueMonths(student);
-            const totalFee = dueMonths * student.monthlyFee;
-            const existingDeposited = getDeposited(student.id);
-            const currentDue = Math.max(0, totalFee - existingDeposited + (student.previousDue || 0));
-            const advance = Math.max(0, paymentAmount - currentDue);
-            const advanceMonths = student.monthlyFee > 0 ? Math.floor(advance / student.monthlyFee) : 0;
-            return { coversDue: Math.min(paymentAmount, currentDue), advanceMonths, advanceAmount: advance };
-        }
-
-        // ─── DASHBOARD ────────────────────────────────────────────────────────────
-        function renderDashboard() {
-            const activeStudents = getActiveSessionStudents();
-            document.getElementById('d-total').textContent = activeStudents.length;
-            const now = new Date();
-            const ym = now.getFullYear() + '-' + (String(now.getMonth() + 1).padStart(2, '0'));
-            const monthlyCol = getActiveSessionPayments().filter(p => p.date.startsWith(ym)).reduce((s, p) => s + p
-                .amount, 0);
-            document.getElementById('d-collected').textContent = '₹' + monthlyCol.toLocaleString('en-IN');
-            const totalDue = activeStudents.reduce((s, st) => s + getTotalDueForStudent(st), 0);
-            document.getElementById('d-due').textContent = '₹' + totalDue.toLocaleString('en-IN');
-            const dueCount = activeStudents.filter(s => getTotalDueForStudent(s) > 0).length;
-            document.getElementById('d-due-count').textContent = dueCount;
-
-            const dtb = document.getElementById('due-table');
-            const dueStudents = activeStudents.filter(s => getTotalDueForStudent(s) > 0);
-            if (!dueStudents.length) {
-                dtb.innerHTML = '<tr><td colspan="6" class="empty-state">No pending dues 🎉</td></tr>';
-            } else {
-                dtb.innerHTML = dueStudents.map((s, i) => `<tr>
-                    <td>${i+1}</td><td><strong>${s.name}</strong></td><td>${s.class}</td>
-                    <td>₹${s.monthlyFee.toLocaleString('en-IN')}</td>
-                    <td><span class="badge badge-red">₹${getTotalDueForStudent(s).toLocaleString('en-IN')}</span></td>
-                    <td><button class="btn wa-btn btn-sm" onclick="sendWA('${s.id}')">📲 WhatsApp</button></td>
-                </tr>`).join('');
-            }
-
-            const rtb = document.getElementById('recent-table');
-            const recent = [...getActiveSessionPayments()].reverse().slice(0, 10);
-            if (!recent.length) {
-                rtb.innerHTML = '<tr><td colspan="5" class="empty-state">No payments yet</td></tr>';
-            } else {
-                rtb.innerHTML = recent.map(p => {
-                    const s = students.find(x => x.id === p.studentId);
-                    return `<tr><td><span class="badge badge-blue">#${p.receiptId}</span></td>
-                        <td>${s?s.name:'—'}</td><td>₹${p.amount.toLocaleString('en-IN')}</td>
-                        <td>${p.date}</td><td>${p.month}</td></tr>`;
-                }).join('');
+            if (sessions.length === 0) {
+                console.warn('⚠️ No sessions found. Add sessions from the Sessions page.');
             }
         }
 
-        // ─── STUDENTS ─────────────────────────────────────────────────────────────
-        function renderStudents() {
-            const q = (document.getElementById('student-search').value || '').toLowerCase();
-            const cf = document.getElementById('student-class-filter') ? document.getElementById('student-class-filter').value : '';
-            const activeStudents = getActiveSessionStudents();
-            const filtered = activeStudents.filter(s =>
-                (s.name.toLowerCase().includes(q) || s.class.toLowerCase().includes(q)) &&
-                (!cf || s.class === cf)
-            );
-            const tb = document.getElementById('student-table');
-            document.getElementById('student-session-badge').textContent = activeSession || 'All Sessions';
-            if (!filtered.length) {
-                tb.innerHTML =
-                    '<tr><td colspan="12" class="empty-state"><div class="big">👨‍🎓</div>No students found in active session</td></tr>';
-                return;
-            }
-            tb.innerHTML = filtered.map((s, i) => `<tr>
-                <td>${i+1}</td>
-                <td><span class="badge badge-blue" style="font-family:monospace;letter-spacing:1px;">${s.scholarNo||'—'}</span></td>
-                <td><strong>${s.name}</strong></td>
-                <td>${s.father}</td>
-                <td>${s.class}${s.section?' - '+s.section:''}</td>
-                <td><span class="badge badge-yellow">${s.session||'—'}</span></td>
-                <td>${s.school||'—'}</td>
-                <td>${s.joining}</td>
-                <td>₹${s.monthlyFee.toLocaleString('en-IN')}</td>
-                <td style="color:var(--green)">₹${getDeposited(s.id).toLocaleString('en-IN')}</td>
-                <td>${getTotalDueForStudent(s)>0?`<span class="badge badge-red">₹${getTotalDueForStudent(s).toLocaleString('en-IN')}</span>`:`<span class="badge badge-green">NIL</span>`}</td>
-                <td style="display:flex;gap:4px;flex-wrap:wrap;">
-                    <button class="btn btn-outline btn-sm" onclick="editStudent('${s.id}')">✏️</button>
-                    <button class="btn btn-gold btn-sm" onclick="showPromoteModal('${s.id}')" title="Promote to next session">⬆️ Promote</button>
-                    <button class="btn btn-red btn-sm" onclick="deleteStudent('${s.id}')">🗑️</button>
-                </td>
-            </tr>`).join('');
-        }
-
-        function openStudentModal(id) {
-            document.getElementById('student-modal-title').textContent = id ? 'Edit Student' : 'Add New Student';
-            document.getElementById('edit-student-id').value = id || '';
-            // Populate session dropdown
-            const sessSel = document.getElementById('s-session');
-            sessSel.innerHTML = sessions.map(s => `<option value="${s.id}">${s.id}</option>`).join('');
-            if (id) {
-                const s = students.find(x => x.id === id);
-                document.getElementById('s-name').value = s.name;
-                document.getElementById('s-father').value = s.father;
-                document.getElementById('s-mother').value = s.mother || '';
-                document.getElementById('s-class').value = s.class;
-                document.getElementById('s-section').value = s.section || '';
-                document.getElementById('s-scholar').value = s.scholarNo || '—';
-                document.getElementById('s-session').value = s.session || activeSession;
-                document.getElementById('s-school').value = s.school || '';
-                document.getElementById('s-address').value = s.address || '';
-                document.getElementById('s-father-ph').value = s.fatherPh || '';
-                document.getElementById('s-mother-ph').value = s.motherPh || '';
-                document.getElementById('s-wa').value = s.wa || '';
-                document.getElementById('s-joining').value = s.joining;
-                document.getElementById('s-fee').value = s.monthlyFee;
-                document.getElementById('s-prev-due').value = s.previousDue || 0;
-                document.getElementById('s-deposit').value = s.initDeposit || 0;
-            } else {
-                ['s-name', 's-father', 's-mother', 's-section', 's-school', 's-address', 's-father-ph', 's-mother-ph',
-                    's-wa'
-                ].forEach(f => document.getElementById(f).value = '');
-                document.getElementById('s-joining').value = new Date().toISOString().split('T')[0];
-                document.getElementById('s-fee').value = '';
-                document.getElementById('s-prev-due').value = '0';
-                document.getElementById('s-deposit').value = '0';
-                document.getElementById('s-class').value = 'Class 1';
-                if (sessSel) sessSel.value = activeSession;
-                previewScholarNumber();
-            }
-            document.getElementById('student-modal').classList.add('open');
-        }
-
-        function editStudent(id) { openStudentModal(id); }
-
-        function closeStudentModal() { document.getElementById('student-modal').classList.remove('open'); }
-
-        function saveStudent() {
-            const name = document.getElementById('s-name').value.trim();
-            const father = document.getElementById('s-father').value.trim();
-            const fee = parseFloat(document.getElementById('s-fee').value) || 0;
-            const joining = document.getElementById('s-joining').value;
-            const sessionId = document.getElementById('s-session').value || activeSession;
-            if (!name || !father || !fee || !joining) {
-                alert('Please fill Name, Father\'s Name, Monthly Fee and Joining Date.');
-                return;
-            }
-            if (!sessionId) { alert('Please select a session.'); return; }
-
-            const editId = document.getElementById('edit-student-id').value;
-            const cls = document.getElementById('s-class').value;
-            const obj = {
-                id: editId || 's' + nextStudentId,
-                scholarNo: editId ? (students.find(x => x.id === editId) || {}).scholarNo : generateScholarNumber(cls,
-                    sessionId),
-                name,
-                father,
-                mother: document.getElementById('s-mother').value.trim(),
-                class: cls,
-                section: document.getElementById('s-section').value.trim(),
-                session: sessionId,
-                school: document.getElementById('s-school').value.trim(),
-                address: document.getElementById('s-address').value.trim(),
-                fatherPh: document.getElementById('s-father-ph').value.trim(),
-                motherPh: document.getElementById('s-mother-ph').value.trim(),
-                wa: document.getElementById('s-wa').value.trim(),
-                joining,
-                monthlyFee: fee,
-                previousDue: parseFloat(document.getElementById('s-prev-due').value) || 0,
-                initDeposit: parseFloat(document.getElementById('s-deposit').value) || 0,
-                promotionHistory: editId ? (students.find(x => x.id === editId) || {}).promotionHistory || [] : []
-            };
-
-            if (editId) {
-                const idx = students.findIndex(x => x.id === editId);
-                if (idx >= 0) {
-                    obj.promotionHistory = students[idx].promotionHistory || [];
-                    students[idx] = obj;
-                }
-            } else {
-                students.push(obj);
-                nextStudentId++;
-                if (obj.initDeposit > 0) {
-                    payments.push({
-                        receiptId: nextReceiptId++,
-                        studentId: obj.id,
-                        amount: obj.initDeposit,
-                        date: joining,
-                        month: 'Admission',
-                        mode: 'Cash',
-                        note: 'Initial deposit'
-                    });
-                }
-            }
-            saveAll();
-            closeStudentModal();
-            renderStudents();
-        }
-
-        function deleteStudent(id) {
-            if (!confirm('Delete this student? All payment records will also be removed.')) return;
-            students = students.filter(s => s.id !== id);
-            payments = payments.filter(p => p.studentId !== id);
-            saveAll();
-            renderStudents();
-        }
-
-        // ─── FEE COLLECTION ───────────────────────────────────────────────────────
-        function populateFeeDropdowns() {
-            const sel = document.getElementById('fee-student');
-            const cur = sel.value;
-            const activeStudents = getActiveSessionStudents();
-            sel.innerHTML = '<option value="">— Select Student —</option>' + activeStudents.map(s =>
-                `<option value="${s.id}">${s.name} (${s.class})</option>`).join('');
-            sel.value = cur;
-            fillFeeDetails();
-        }
+        // ════════════════════════════════════════════════════════════
+        // STUDENT MANAGEMENT
+        // ════════════════════════════════════════════════════════════
 
         function fillFeeDetails() {
-            const id = document.getElementById('fee-student').value;
-            const s = students.find(x => x.id === id);
-            if (!s) {
-                document.getElementById('info-monthly').textContent = '₹0';
-                document.getElementById('info-deposited').textContent = '₹0';
-                document.getElementById('info-due').textContent = '₹0';
-                document.getElementById('info-advance').textContent = '₹0';
-                document.getElementById('fee-amount').value = '';
-                return;
-            }
-            document.getElementById('info-monthly').textContent = '₹' + s.monthlyFee.toLocaleString('en-IN');
-            document.getElementById('info-deposited').textContent = '₹' + getDeposited(s.id).toLocaleString('en-IN');
-            const due = getTotalDueForStudent(s);
-            document.getElementById('info-due').textContent = '₹' + due.toLocaleString('en-IN');
-            const adv = getAdvanceBalance(s);
-            document.getElementById('info-advance').textContent = '₹' + adv.toLocaleString('en-IN');
-            if (!document.getElementById('fee-amount').value) document.getElementById('fee-amount').value = due > 0 ?
-                Math.min(due, s.monthlyFee) : s.monthlyFee;
-        }
-
-        function doRecordPayment() {
-            const sid = document.getElementById('fee-student').value;
-            const amount = parseFloat(document.getElementById('fee-amount').value) || 0;
-            const date = document.getElementById('fee-date').value;
-            const month = document.getElementById('fee-month').value;
-            const mode = document.getElementById('fee-mode').value;
-            const note = document.getElementById('fee-note').value;
-            if (!sid || !amount || !date || !month) { alert('Please fill all required fields.'); return null; }
-            const pay = { receiptId: nextReceiptId++, studentId: sid, amount, date, month, mode, note };
-            payments.push(pay);
-            saveAll();
-            fillFeeDetails();
-            return pay;
-        }
-
-        function recordPayment() {
-            const p = doRecordPayment();
-            if (p) {
-                const s = students.find(x => x.id === p.studentId);
-                const adv = s ? getAdvanceBalance(s) : 0;
-                let msg = '✅ Payment recorded successfully! Receipt #' + p.receiptId;
-                if (adv > 0) msg += '\n\n📌 Advance balance: ₹' + adv.toLocaleString('en-IN') +
-                    ' — covers upcoming months.';
-                alert(msg);
-                document.getElementById('fee-amount').value = '';
+            const studentId = document.getElementById('fee-student').value;
+            if (!studentId) return;
+            
+            const students = JSON.parse(localStorage.getItem('students')) || [];
+            const student = students.find(s => s.id === studentId);
+            
+            if (student) {
+                document.getElementById('display-monthly-fee').textContent = '₹' + (student.monthlyFee || 0);
+                console.log('✅ Student selected:', student.name);
+                // Add logic to display other fee details
             }
         }
 
-        function recordAndPrint() {
-            const p = doRecordPayment();
-            if (!p) return;
-            showPage('receipt');
-            populateReceiptDropdowns();
-            setTimeout(() => {
-                document.getElementById('receipt-record-sel').value = p.receiptId;
-                previewReceipt();
-                setTimeout(() => window.print(), 400);
-            }, 200);
+        function renderStudents() {
+            const searchTerm = document.getElementById('student-search')?.value.toLowerCase() || '';
+            const classFilter = document.getElementById('student-class-filter')?.value || '';
+            const students = JSON.parse(localStorage.getItem('students')) || [];
+            
+            let filtered = students.filter(s => 
+                (s.name?.toLowerCase().includes(searchTerm) || '') &&
+                (classFilter === '' || s.class === classFilter)
+            );
+            
+            // Render in fee-student dropdown
+            const select = document.getElementById('fee-student');
+            if (select) {
+                select.innerHTML = '<option value="">— Select Student —</option>';
+                filtered.forEach(student => {
+                    const opt = document.createElement('option');
+                    opt.value = student.id;
+                    opt.text = `${student.name} (${student.class})`;
+                    select.appendChild(opt);
+                });
+            }
         }
 
-        // ─── FEE RECORDS ──────────────────────────────────────────────────────────
-        function populateMonthFilter() {
-            const sel = document.getElementById('record-filter-month');
-            const activePmts = getActiveSessionPayments();
-            const months = [...new Set(activePmts.map(p => p.month))].sort().reverse();
-            sel.innerHTML = '<option value="">All Months</option>' + months.map(m => `<option>${m}</option>`).join('');
+        function loadStudentData() {
+            const students = JSON.parse(localStorage.getItem('students')) || [];
+            const tableBody = document.getElementById('student-table');
+            
+            if (tableBody) {
+                tableBody.innerHTML = '';
+                if (students.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:20px;">No students added yet. Click "+ Add Student" to get started.</td></tr>';
+                    return;
+                }
+                students.forEach((student, idx) => {
+                    const row = `<tr>
+                        <td>${idx + 1}</td>
+                        <td>${student.scholarNo || '-'}</td>
+                        <td>${student.name}</td>
+                        <td>${student.fatherName || '-'}</td>
+                        <td>${student.class}</td>
+                        <td>${student.session || '-'}</td>
+                        <td>${student.school || '-'}</td>
+                        <td>${student.joiningDate || '-'}</td>
+                        <td>₹${student.monthlyFee || 0}</td>
+                        <td>${student.deposit || '-'}</td>
+                    </tr>`;
+                    tableBody.innerHTML += row;
+                });
+            }
         }
+
+        // ════════════════════════════════════════════════════════════
+        // PAYMENT RECORDS MANAGEMENT
+        // ════════════════════════════════════════════════════════════
 
         function renderRecords() {
-            const q = (document.getElementById('record-search').value || '').toLowerCase();
-            const mf = document.getElementById('record-filter-month').value;
-            const activePmts = getActiveSessionPayments();
-            let recs = activePmts.filter(p => {
-                const s = students.find(x => x.id === p.studentId);
-                const nm = (s ? s.name : '').toLowerCase();
-                return nm.includes(q) && (!mf || p.month === mf);
-            }).reverse();
-
-            const tb = document.getElementById('records-table');
-            if (!recs.length) { tb.innerHTML = '<tr><td colspan="8" class="empty-state">No records found</td></tr>';
-            return; }
-            tb.innerHTML = recs.map(p => {
-                const s = students.find(x => x.id === p.studentId);
-                return `<tr>
-                    <td><span class="badge badge-blue">#${p.receiptId}</span></td>
-                    <td>${s?s.name:'—'}</td><td>${s?s.class:'—'}</td><td>${p.month}</td>
-                    <td style="font-weight:600;">₹${p.amount.toLocaleString('en-IN')}</td>
-                    <td>${p.date}</td><td><span class="badge badge-green">${p.mode}</span></td>
-                    <td>
-                        <button class="btn btn-outline btn-sm" onclick="viewReceiptById(${p.receiptId})">🖨️ Receipt</button>
-                        <button class="btn btn-red btn-sm" onclick="deletePayment(${p.receiptId})">🗑️</button>
-                    </td></tr>`;
-            }).join('');
+            const searchTerm = document.getElementById('record-search')?.value.toLowerCase() || '';
+            const monthFilter = document.getElementById('record-filter-month')?.value || '';
+            const payments = JSON.parse(localStorage.getItem('payments')) || [];
+            
+            let filtered = payments.filter(p =>
+                (p.studentName?.toLowerCase().includes(searchTerm) || '') &&
+                (monthFilter === '' || p.month === monthFilter)
+            );
+            
+            const tableBody = document.getElementById('records-table');
+            if (tableBody) {
+                tableBody.innerHTML = filtered.length ? 
+                    filtered.map(p => `<tr>
+                        <td>${p.receiptNo}</td>
+                        <td>${p.studentName}</td>
+                        <td>${p.class}</td>
+                        <td>${p.month}</td>
+                        <td>₹${p.amount}</td>
+                        <td>${p.date}</td>
+                        <td>${p.mode}</td>
+                        <td><button class="btn btn-sm btn-outline" onclick="editPayment('${p.receiptNo}')">Edit</button></td>
+                    </tr>`).join('') 
+                    : '<tr><td colspan="8" style="text-align:center;padding:20px;">No payment records found</td></tr>';
+            }
         }
 
-        function deletePayment(rid) {
-            if (!confirm('Delete this payment record?')) return;
-            payments = payments.filter(p => p.receiptId !== rid);
-            saveAll();
-            renderRecords();
+        function loadPaymentMonths() {
+            const payments = JSON.parse(localStorage.getItem('payments')) || [];
+            const months = [...new Set(payments.map(p => p.month))];
+            
+            const select = document.getElementById('record-filter-month');
+            if (select) {
+                select.innerHTML = '<option value="">All Months</option>';
+                months.forEach(month => {
+                    const opt = document.createElement('option');
+                    opt.value = month;
+                    opt.text = month;
+                    select.appendChild(opt);
+                });
+            }
         }
 
-        function viewReceiptById(rid) {
-            showPage('receipt');
-            populateReceiptDropdowns();
-            setTimeout(() => {
-                document.getElementById('receipt-record-sel').value = rid;
-                previewReceipt();
-            }, 100);
+        function loadPaymentRecords() {
+            const payments = JSON.parse(localStorage.getItem('payments')) || [];
+            const select = document.getElementById('receipt-record-sel');
+            if (select) {
+                select.innerHTML = '<option value="">— Select a Payment —</option>';
+                payments.forEach(payment => {
+                    const opt = document.createElement('option');
+                    opt.value = payment.receiptNo;
+                    opt.text = `${payment.studentName} - ₹${payment.amount} (${payment.date})`;
+                    select.appendChild(opt);
+                });
+            }
         }
 
-        // ─── WHATSAPP REMINDERS ───────────────────────────────────────────────────
-        function renderReminders() {
-            const activeStudents = getActiveSessionStudents();
-            const due = activeStudents.filter(s => getTotalDueForStudent(s) > 0);
-            const tb = document.getElementById('reminder-table');
-            if (!due.length) { tb.innerHTML =
-                '<tr><td colspan="7" class="empty-state">🎉 No pending dues!</td></tr>'; return; }
-            tb.innerHTML = due.map(s => `<tr>
-                <td><strong>${s.name}</strong></td><td>${s.class}</td><td>${s.father}</td>
-                <td>${s.wa||s.fatherPh||'—'}</td><td>₹${s.monthlyFee.toLocaleString('en-IN')}</td>
-                <td><span class="badge badge-red">₹${getTotalDueForStudent(s).toLocaleString('en-IN')}</span></td>
-                <td><button class="btn wa-btn btn-sm" onclick="sendWA('${s.id}')">📲 Send</button></td>
-            </tr>`).join('');
+        // ════════════════════════════════════════════════════════════
+        // RECEIPT MANAGEMENT
+        // ════════════════════════════════════════════════════════════
+
+        function previewReceipt() {
+            const recordId = document.getElementById('receipt-record-sel').value;
+            if (!recordId) return;
+            
+            const payments = JSON.parse(localStorage.getItem('payments')) || [];
+            const payment = payments.find(p => p.receiptNo === recordId);
+            
+            if (payment) {
+                displayReceiptPreview(payment);
+            }
         }
 
-        function buildWAMsg(sid) {
-            const s = students.find(x => x.id === sid);
-            if (!s) return '';
-            const due = getTotalDueForStudent(s);
-            return `Dear Parent of *${s.name}* (${s.class}),\n\nThis is a friendly reminder from *Providence Tutorials* that a fee of *₹${due.toLocaleString('en-IN')}* is pending for your ward.\n\nKindly deposit the fee as soon as possible to avoid any inconvenience.\n\nThank you 🙏\n— Providence Tutorials`;
-        }
-
-        function sendWA(sid) {
-            const s = students.find(x => x.id === sid);
-            if (!s) { alert('Student not found.'); return; }
-            const num = (s.wa || s.fatherPh || '').replace(/\D/g, '');
-            if (!num) { alert('No WhatsApp number found.'); return; }
-            const msg = buildWAMsg(sid);
-            window.open(`https://wa.me/91${num}?text=${encodeURIComponent(msg)}`, '_blank');
-        }
-
-        function sendAllReminders() {
-            const activeStudents = getActiveSessionStudents();
-            const due = activeStudents.filter(s => getTotalDueForStudent(s) > 0);
-            if (!due.length) { alert('No pending dues!'); return; }
-            if (!confirm(`Send WhatsApp reminders to ${due.length} students?`)) return;
-            due.forEach((s, i) => { setTimeout(() => sendWA(s.id), i * 600); });
-        }
-
-        // ─── RECEIPT (ENHANCED) ───────────────────────────────────────────────────
-        function populateReceiptDropdowns() {
-            const ssel = document.getElementById('receipt-student-sel');
-            const activeStudents = getActiveSessionStudents();
-            ssel.innerHTML = '<option value="">— All Students —</option>' + activeStudents.map(s =>
-                `<option value="${s.id}">${s.name}</option>`).join('');
-            filterReceiptRecords();
+        function displayReceiptPreview(payment) {
+            const receiptContent = document.getElementById('receipt-content');
+            receiptContent.innerHTML = `
+                <div class="receipt-header">
+                    <h2>Providence Tutorials</h2>
+                    <p>Fee Receipt</p>
+                </div>
+                <hr class="receipt-divider">
+                <div class="receipt-row">
+                    <span class="lbl">Receipt #:</span>
+                    <span>${payment.receiptNo}</span>
+                </div>
+                <div class="receipt-row">
+                    <span class="lbl">Date:</span>
+                    <span>${payment.date}</span>
+                </div>
+                <div class="receipt-row">
+                    <span class="lbl">Student Name:</span>
+                    <span>${payment.studentName}</span>
+                </div>
+                <div class="receipt-row">
+                    <span class="lbl">Class:</span>
+                    <span>${payment.class}</span>
+                </div>
+                <div class="receipt-row">
+                    <span class="lbl">Payment Month:</span>
+                    <span>${payment.month}</span>
+                </div>
+                <hr class="receipt-divider">
+                <div class="receipt-total">
+                    <span>Amount:</span>
+                    <span>₹${payment.amount}</span>
+                </div>
+                <div class="receipt-row" style="margin-top:10px;">
+                    <span class="lbl">Payment Mode:</span>
+                    <span>${payment.mode}</span>
+                </div>
+                <div class="receipt-stamp">
+                    <p>Thank you for your payment!</p>
+                    <p>© 2025 Providence Tutorials</p>
+                </div>
+            `;
         }
 
         function filterReceiptRecords() {
-            const sid = document.getElementById('receipt-student-sel').value;
-            const activePmts = getActiveSessionPayments();
-            const recs = activePmts.filter(p => !sid || p.studentId === sid).reverse();
-            const sel = document.getElementById('receipt-record-sel');
-            sel.innerHTML = '<option value="">— Select a Payment —</option>' + recs.map(p => {
-                const s = students.find(x => x.id === p.studentId);
-                return `<option value="${p.receiptId}">#${p.receiptId} — ${s?s.name:''} — ₹${p.amount} — ${p.date}</option>`;
-            }).join('');
-        }
-
-        function previewReceipt() {
-            const rid = parseInt(document.getElementById('receipt-record-sel').value);
-            const p = payments.find(x => x.receiptId === rid);
-            const cont = document.getElementById('receipt-content');
-            if (!p) {
-                cont.innerHTML =
-                    '<div style="text-align:center;color:var(--muted);padding:30px;">Select a payment to preview</div>';
-                return;
-            }
-            const s = students.find(x => x.id === p.studentId);
-            const due = s ? getTotalDueForStudent(s) : 0;
-            const adv = s ? getAdvanceBalance(s) : 0;
-            const nextDate = s ? getNextPaymentDate(s) : '—';
-            const coverage = s ? getMonthsCoveredByPayment(s, p.amount) : { advanceMonths: 0, advanceAmount: 0 };
-            cont.innerHTML = `
-                <div class="receipt-header">
-                    <h2>Providence Tutorials</h2>
-                    <p>Fee Payment Receipt</p>
-                    <p style="font-size:9px;color:#aaa;">Agar Malwa, Madhya Pradesh</p>
-                </div>
-                <hr class="receipt-divider">
-                <div class="receipt-row"><span class="lbl">Receipt No.</span><span><strong>#${p.receiptId}</strong></span></div>
-                <div class="receipt-row"><span class="lbl">Date</span><span>${p.date}</span></div>
-                <hr class="receipt-divider">
-                <div class="receipt-row"><span class="lbl">Student Name</span><span><strong>${s?s.name:'—'}</strong></span></div>
-                <div class="receipt-row"><span class="lbl">Scholar No.</span><span style="font-family:monospace;font-weight:700;">${s?s.scholarNo||'—':'—'}</span></div>
-                <div class="receipt-row"><span class="lbl">Father's Name</span><span>${s?s.father:'—'}</span></div>
-                <div class="receipt-row"><span class="lbl">Class</span><span>${s?s.class+(s.section?' – '+s.section:''):'—'}</span></div>
-                <div class="receipt-row"><span class="lbl">Session</span><span>${s?s.session||'—':'—'}</span></div>
-                <div class="receipt-row"><span class="lbl">School</span><span>${s?s.school||'—':'—'}</span></div>
-                <hr class="receipt-divider">
-                <div class="receipt-row"><span class="lbl">Month</span><span>${p.month}</span></div>
-                <div class="receipt-row"><span class="lbl">Payment Mode</span><span>${p.mode}</span></div>
-                ${p.note?`<div class="receipt-row"><span class="lbl">Note</span><span>${p.note}</span></div>`:''}
-                <div class="receipt-total"><span>Amount Paid</span><span>₹${p.amount.toLocaleString('en-IN')}</span></div>
-                ${coverage.advanceMonths>0?`<div class="receipt-row" style="color:var(--blue);font-weight:600;margin-top:4px;"><span>Advance Months Covered</span><span>${coverage.advanceMonths} month(s)</span></div>`:''}
-                ${adv>0?`<div class="receipt-row" style="color:var(--blue);font-weight:600;margin-top:4px;"><span>Advance Balance</span><span>₹${adv.toLocaleString('en-IN')}</span></div>`:''}
-                <div class="receipt-row" style="margin-top:4px;"><span class="lbl">Next Payment Due</span><span style="font-weight:600;">${nextDate}</span></div>
-                ${due>0?`<div class="receipt-row" style="color:var(--red);font-weight:600;margin-top:6px;"><span>Balance Due</span><span>₹${due.toLocaleString('en-IN')}</span></div>`:'<div style="text-align:center;color:var(--green);font-size:11px;margin-top:8px;font-weight:600;">✅ No pending dues</div>'}
-                <div class="receipt-stamp">
-                    <hr style="border:none;border-top:1px dashed #ccc;margin:10px 0;">
-                    <span>This is a computer-generated receipt</span><br>
-                    <span style="font-size:9px;">Providence Tutorials — Thank you! 🙏</span>
-                </div>`;
-        }
-
-        // ─── SESSIONS MANAGEMENT (NEW) ────────────────────────────────────────────
-        function switchActiveSession() {
-            const sel = document.getElementById('active-session-select');
-            activeSession = sel.value;
-            localStorage.setItem('pt_activeSession', activeSession);
-            renderDashboard();
-            if (document.getElementById('pg-students').classList.contains('active')) renderStudents();
-            if (document.getElementById('pg-fees').classList.contains('active')) populateFeeDropdowns();
-            if (document.getElementById('pg-records').classList.contains('active')) { populateMonthFilter();
-                renderRecords(); }
-            if (document.getElementById('pg-reminders').classList.contains('active')) renderReminders();
-            if (document.getElementById('pg-receipt').classList.contains('active')) populateReceiptDropdowns();
-        }
-
-        function refreshSessionSelector() {
-            const sel = document.getElementById('active-session-select');
-            sel.innerHTML = sessions.map(s => `<option value="${s.id}" ${s.id===activeSession?'selected':''}>${s.id}</option>`)
-                .join('');
-            if (!activeSession && sessions.length > 0) {
-                activeSession = sessions[0].id;
-                sel.value = activeSession;
-                localStorage.setItem('pt_activeSession', activeSession);
+            const studentId = document.getElementById('receipt-student-sel').value;
+            const payments = JSON.parse(localStorage.getItem('payments')) || [];
+            
+            const filtered = studentId ? payments.filter(p => p.studentId === studentId) : payments;
+            
+            const select = document.getElementById('receipt-record-sel');
+            if (select) {
+                select.innerHTML = '<option value="">— Select a Payment —</option>';
+                filtered.forEach(payment => {
+                    const opt = document.createElement('option');
+                    opt.value = payment.receiptNo;
+                    opt.text = `${payment.studentName} - ₹${payment.amount} (${payment.date})`;
+                    select.appendChild(opt);
+                });
             }
         }
 
-        function renderSessionsPage() {
-            refreshSessionSelector();
-            const div = document.getElementById('sessions-list');
-            if (!sessions.length) {
-                div.innerHTML = '<p style="color:var(--muted);font-size:13px;">No sessions created yet.</p>';
-            } else {
-                div.innerHTML = sessions.map(s => {
-                    const count = students.filter(st => st.session === s.id).length;
-                    const isActive = s.id === activeSession;
-                    return `<div class="session-card">
-                        <div class="sess-info">
-                            <span class="sess-name">📅 ${s.id}</span>
-                            <span class="sess-meta">| ${count} students | Created: ${new Date(s.created).toLocaleDateString('en-IN')}</span>
-                            ${isActive?'<span class="badge badge-green">Active</span>':''}
-                        </div>
-                        <div style="display:flex;gap:8px;">
-                            ${!isActive?`<button class="btn btn-primary btn-sm" onclick="setActiveSession('${s.id}')">✅ Set Active</button>`:''}
-                            <button class="btn btn-red btn-sm" onclick="deleteSession('${s.id}')" ${isActive?'disabled title="Cannot delete active session"':''}>🗑️</button>
-                        </div>
-                    </div>`;
-                }).join('');
+        function loadReceiptRecords() {
+            const students = JSON.parse(localStorage.getItem('students')) || [];
+            const select = document.getElementById('receipt-student-sel');
+            if (select) {
+                select.innerHTML = '<option value="">— All Students —</option>';
+                students.forEach(student => {
+                    const opt = document.createElement('option');
+                    opt.value = student.id;
+                    opt.text = student.name;
+                    select.appendChild(opt);
+                });
             }
-            // Populate promote target dropdown
-            const promoSel = document.getElementById('promote-target-session');
-            promoSel.innerHTML = '<option value="">— Select target session —</option>' + sessions.map(s =>
-                `<option value="${s.id}" ${s.id===activeSession?'disabled':''}>${s.id}</option>`).join('');
-            document.getElementById('promote-joining-date').value = new Date().toISOString().split('T')[0];
         }
 
-        function setActiveSession(sessionId) {
-            activeSession = sessionId;
-            localStorage.setItem('pt_activeSession', activeSession);
-            refreshSessionSelector();
-            renderSessionsPage();
-            renderDashboard();
+        // ════════════════════════════════════════════════════════════
+        // UTILITY FUNCTIONS (Placeholders for existing functions)
+        // ════════════════════════════════════════════════════════════
+
+        function showPage(pageName) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('pg-' + pageName).classList.add('active');
+            document.getElementById('page-title').textContent = pageName.charAt(0).toUpperCase() + pageName.slice(1);
+        }
+
+        function recordPayment() {
+            alert('🔄 Record Payment function - To be implemented');
+        }
+
+        function recordAndPrint() {
+            alert('🔄 Record & Print function - To be implemented');
+        }
+
+        function openStudentGated() {
+            alert('🔄 Add Student modal - To be implemented');
         }
 
         function showCreateSessionModal() {
-            document.getElementById('sess-start-year').value = new Date().getFullYear();
-            document.getElementById('sess-end-year').value = new Date().getFullYear() + 1;
-            document.getElementById('sess-error').style.display = 'none';
-            document.getElementById('session-modal').classList.add('open');
+            alert('🔄 Create Session modal - To be implemented');
         }
 
-        function createSession() {
-            const sy = parseInt(document.getElementById('sess-start-year').value);
-            const ey = parseInt(document.getElementById('sess-end-year').value);
-            const errEl = document.getElementById('sess-error');
-            errEl.style.display = 'none';
-            if (!sy || !ey) { errEl.textContent = 'Please enter both years.';
-                errEl.style.display = 'block'; return; }
-            if (ey !== sy + 1) { errEl.textContent = 'End year must be Start year + 1.';
-                errEl.style.display = 'block'; return; }
-            const id = sy + '-' + String(ey).slice(-2);
-            if (sessions.find(s => s.id === id)) { errEl.textContent = 'Session "' + id +
-                    '" already exists.';
-                errEl.style.display = 'block'; return; }
-            sessions.push({ id, startYear: sy, endYear: ey, created: new Date().toISOString() });
-            if (!activeSession) activeSession = id;
-            saveAll();
-            document.getElementById('session-modal').classList.remove('open');
-            refreshSessionSelector();
-            renderSessionsPage();
-            alert('✅ Session "' + id + '" created!');
-        }
-
-        function deleteSession(sessionId) {
-            if (sessionId === activeSession) { alert('Cannot delete the active session.'); return; }
-            const count = students.filter(s => s.session === sessionId).length;
-            if (count > 0 && !confirm(
-                    `Session "${sessionId}" has ${count} student(s). Deleting it will also remove those students. Continue?`
-                    )) return;
-            if (!confirm(`Delete session "${sessionId}"?`)) return;
-            students = students.filter(s => s.session !== sessionId);
-            sessions = sessions.filter(s => s.id !== sessionId);
-            saveAll();
-            refreshSessionSelector();
-            renderSessionsPage();
-        }
-
-        // ─── INDIVIDUAL STUDENT PROMOTION ──────────────────────────────────────────
-        function showPromoteModal(studentId) {
-            const s = students.find(x => x.id === studentId);
-            if (!s) return;
-
-            document.getElementById('pm-student-id').value = studentId;
-            document.getElementById('pm-error').style.display = 'none';
-
-            // Summary box
-            const due = getTotalDueForStudent(s);
-            document.getElementById('pm-summary').innerHTML =
-                '<strong>' + s.name + '</strong> &nbsp;|&nbsp; ' + s.class + (s.section ? ' – ' + s.section : '') +
-                ' &nbsp;|&nbsp; Session: <strong>' + (s.session || '—') + '</strong>' +
-                ' &nbsp;|&nbsp; Scholar No: <strong>' + (s.scholarNo || '—') + '</strong>';
-
-            // Due warning
-            const dueWarn = document.getElementById('pm-due-warn');
-            if (due > 0) {
-                document.getElementById('pm-due-amount').textContent = '₹' + due.toLocaleString('en-IN');
-                dueWarn.style.display = 'block';
-            } else {
-                dueWarn.style.display = 'none';
-            }
-
-            // Populate target session (exclude current session)
-            const pmSel = document.getElementById('pm-target-session');
-            pmSel.innerHTML = '<option value="">— Select target session —</option>' +
-                sessions.filter(sess => sess.id !== s.session)
-                    .map(sess => '<option value="' + sess.id + '">' + sess.id + '</option>').join('');
-
-            // Pre-select next class
-            const classNum = parseInt(s.class.replace(/\D/g, '')) || 0;
-            const nextClass = classNum < 12 ? 'Class ' + (classNum + 1) : 'Passed Out';
-            document.getElementById('pm-new-class').value = nextClass;
-
-            // Default joining date = today
-            document.getElementById('pm-joining-date').value = new Date().toISOString().split('T')[0];
-
-            // Pre-fill monthly fee
-            document.getElementById('pm-monthly-fee').value = s.monthlyFee;
-
-            document.getElementById('promote-modal').classList.add('open');
-        }
-
-        function doPromoteStudent() {
-            const studentId = document.getElementById('pm-student-id').value;
-            const targetSession = document.getElementById('pm-target-session').value;
-            const newClass = document.getElementById('pm-new-class').value;
-            const newJoining = document.getElementById('pm-joining-date').value;
-            const newFeeRaw = document.getElementById('pm-monthly-fee').value;
-            const errEl = document.getElementById('pm-error');
-            errEl.style.display = 'none';
-
-            if (!targetSession) { errEl.textContent = 'Please select a target session.'; errEl.style.display = 'block'; return; }
-            if (!newJoining)    { errEl.textContent = 'Please enter a new joining date.'; errEl.style.display = 'block'; return; }
-
-            const s = students.find(x => x.id === studentId);
-            if (!s) return;
-
-            // Check not already promoted to this session
-            const alreadyExists = students.find(x =>
-                x.name === s.name && x.father === s.father && x.session === targetSession
-            );
-            if (alreadyExists) {
-                errEl.textContent = 'This student already exists in the target session (' + targetSession + ').';
-                errEl.style.display = 'block'; return;
-            }
-
-            // Carry forward due fee as previousDue in new session
-            const carryDue = getTotalDueForStudent(s);
-            const newFee = newFeeRaw ? parseFloat(newFeeRaw) : s.monthlyFee;
-
-            // Generate new scholar number for new session + class
-            const newScholarNo = generateScholarNumber(newClass, targetSession);
-
-            // Create new student record for the new session
-            const newStudent = {
-                id: 's' + nextStudentId++,
-                scholarNo: newScholarNo,
-                name: s.name,
-                father: s.father,
-                mother: s.mother || '',
-                class: newClass,
-                section: s.section || '',
-                session: targetSession,
-                school: s.school || '',
-                address: s.address || '',
-                fatherPh: s.fatherPh || '',
-                motherPh: s.motherPh || '',
-                wa: s.wa || '',
-                joining: newJoining,
-                monthlyFee: newFee,
-                previousDue: carryDue,
-                promotionHistory: [
-                    ...(s.promotionHistory || []),
-                    {
-                        from: s.session,
-                        to: targetSession,
-                        fromClass: s.class,
-                        toClass: newClass,
-                        date: new Date().toISOString().split('T')[0],
-                        carryDue: carryDue
-                    }
-                ],
-                payments: []
-            };
-
-            students.push(newStudent);
-            saveAll();
-            document.getElementById('promote-modal').classList.remove('open');
-            renderStudents();
-            alert('✅ ' + s.name + ' promoted successfully to ' + targetSession + ' (' + newClass + ')!
-
-' +
-                (carryDue > 0 ? '📌 Previous due of ₹' + carryDue.toLocaleString('en-IN') + ' has been carried forward.
-
-' : '') +
-                'New Scholar Number: ' + newScholarNo);
-        }
-
-        function promoteStudents() {
-            const targetSession = document.getElementById('promote-target-session').value;
-            const newJoining = document.getElementById('promote-joining-date').value;
-            if (!targetSession) { alert('Please select a target session.'); return; }
-            if (!newJoining) { alert('Please select a new joining date.'); return; }
-            if (targetSession === activeSession) { alert('Target session must be different from the active session.'); return; }
-            const activeStudents = getActiveSessionStudents();
-            if (!activeStudents.length) { alert('No students in the active session to promote.'); return; }
-            if (!confirm(
-                    `Promote ALL ${activeStudents.length} students from "${activeSession}" to "${targetSession}"?\n\nClasses will increment by 1.\nPrevious dues will be carried forward.\nNew scholar numbers will be assigned.`
-                    )) return;
-
-            activeStudents.forEach(s => {
-                const due = getTotalDueForStudent(s);
-                const clsNum = parseInt(s.class.replace(/\D/g, '')) || 1;
-                const newClass = clsNum < 12 ? 'Class ' + (clsNum + 1) : s.class;
-                const newScholarNo = generateScholarNumber(newClass, targetSession);
-                const newStudent = {
-                    ...s,
-                    id: 's' + nextStudentId,
-                    class: newClass,
-                    session: targetSession,
-                    scholarNo: newScholarNo,
-                    joining: newJoining,
-                    previousDue: due,
-                    initDeposit: 0,
-                    promotionHistory: [...(s.promotionHistory || []), { fromSession: s.session,
-                        toSession: targetSession, date: new Date().toISOString(), previousDue: due }]
-                };
-                students.push(newStudent);
-                nextStudentId++;
-            });
-            saveAll();
-            refreshSessionSelector();
-            renderSessionsPage();
-            alert(
-                `✅ ${activeStudents.length} students promoted to session "${targetSession}"!\n\nTheir previous dues have been carried forward. Switch the active session to view them.`
-                );
-        }
-
-        // ─── BACKUP & RESTORE ─────────────────────────────────────────────────────
-        const MAX_AUTO_BACKUPS = 10;
-
-        function saveAutoBackup() {
-            const backups = JSON.parse(localStorage.getItem('pt_auto_backups') || '[]');
-            const snapshot = {
-                ts: new Date().toISOString(),
-                students: JSON.parse(JSON.stringify(students)),
-                payments: JSON.parse(JSON.stringify(payments)),
-                sessions: JSON.parse(JSON.stringify(sessions)),
-                activeSession,
-                nextStudentId,
-                nextReceiptId
-            };
-            backups.unshift(snapshot);
-            if (backups.length > MAX_AUTO_BACKUPS) backups.length = MAX_AUTO_BACKUPS;
-            localStorage.setItem('pt_auto_backups', JSON.stringify(backups));
+        function sendAllReminders() {
+            alert('🔄 Send All Reminders function - To be implemented');
         }
 
         function exportBackup() {
-            const data = {
-                version: 2,
-                exportedAt: new Date().toISOString(),
-                institute: 'Providence Tutorials',
-                students,
-                payments,
-                sessions,
-                activeSession,
-                nextStudentId,
-                nextReceiptId
-            };
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            const dateStr = new Date().toISOString().slice(0, 10);
-            a.download = `providence_backup_${dateStr}.json`;
-            a.click();
-            URL.revokeObjectURL(a.href);
-            alert(`✅ Backup downloaded!\nFile: providence_backup_${dateStr}.json`);
+            alert('🔄 Export Backup function - To be implemented');
         }
 
         function importBackup() {
-            const file = document.getElementById('restore-file').files[0];
-            if (!file) { alert('Please select a backup .json file first.'); return; }
-            if (!confirm('⚠️ WARNING: This will replace ALL current data.')) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    if (!data.students || !data.payments) throw new Error('Invalid backup file format.');
-                    students = data.students;
-                    payments = data.payments;
-                    sessions = data.sessions || [];
-                    activeSession = data.activeSession || '';
-                    nextStudentId = data.nextStudentId || students.length + 1;
-                    nextReceiptId = data.nextReceiptId || 1001;
-                    saveAll();
-                    refreshSessionSelector();
-                    alert(
-                        `✅ Restore successful!\n${students.length} students, ${payments.length} payments, ${sessions.length} sessions restored.`
-                        );
-                    renderBackupPage();
-                    renderDashboard();
-                } catch (err) {
-                    alert('❌ Failed to restore: ' + err.message);
-                }
-            };
-            reader.readAsText(file);
+            alert('🔄 Import Backup function - To be implemented');
         }
-
-        function restoreAutoBackup(index) {
-            const backups = JSON.parse(localStorage.getItem('pt_auto_backups') || '[]');
-            const snap = backups[index];
-            if (!snap) return;
-            if (!confirm(`Restore auto-backup from:\n${new Date(snap.ts).toLocaleString('en-IN')}?`)) return;
-            students = snap.students;
-            payments = snap.payments;
-            sessions = snap.sessions || [];
-            activeSession = snap.activeSession || '';
-            nextStudentId = snap.nextStudentId;
-            nextReceiptId = snap.nextReceiptId;
-            saveAll();
-            refreshSessionSelector();
-            alert('✅ Auto-backup restored!');
-            renderBackupPage();
-            renderDashboard();
-        }
-
-        function renderBackupPage() {
-            const totalDeposited = payments.reduce((s, p) => s + p.amount, 0);
-            document.getElementById('backup-stats').innerHTML =
-                `Current: <strong>${students.length} students</strong> · <strong>${payments.length} payments</strong> · <strong>${sessions.length} sessions</strong> · Collected: <strong>₹${totalDeposited.toLocaleString('en-IN')}</strong>`;
-            const backups = JSON.parse(localStorage.getItem('pt_auto_backups') || '[]');
-            const div = document.getElementById('auto-backup-list');
-            if (!backups.length) {
-                div.innerHTML =
-                    '<p style="color:var(--muted);font-size:13px;">No auto-backups yet. They appear after you save data.</p>';
-                return;
-            }
-            div.innerHTML = `<table><thead><tr><th>#</th><th>Saved At</th><th>Students</th><th>Payments</th><th>Action</th></tr></thead><tbody>
-                ${backups.map((b,i)=>`<tr>
-                    <td>${i===0?'<span class="badge badge-green">Latest</span>':'#'+(i+1)}</td>
-                    <td>${new Date(b.ts).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
-                    <td>${b.students.length}</td><td>${b.payments.length}</td>
-                    <td><button class="btn btn-outline btn-sm" onclick="restoreAutoBackup(${i})">↩️ Restore</button></td>
-                </tr>`).join('')}</tbody></table>`;
-        }
-
-        // ─── AUTH GUARD ───────────────────────────────────────────────────────────
-        (function() {
-            const raw = localStorage.getItem('pt_session');
-            if (!raw) { window.location.href = './index.html'; return; }
-            const s = JSON.parse(raw);
-            const SESSION_TTL = 8 * 60 * 60 * 1000;
-            if (Date.now() - (s.loginTime || 0) > SESSION_TTL) {
-                localStorage.removeItem('pt_session');
-                window.location.href = './index.html';
-                return;
-            }
-            document.addEventListener('DOMContentLoaded', function() {
-                const nameEl = document.getElementById('topbar-user');
-                const roleEl = document.getElementById('topbar-role');
-                if (nameEl) nameEl.textContent = s.name || s.uid;
-                if (roleEl) roleEl.textContent = s.role === 'admin' ? '(Admin)' : '(Staff)';
-                // Initialize session selector
-                migrateData();
-                refreshSessionSelector();
-                renderDashboard();
-                renderBackupPage();
-            });
-        })();
 
         function doLogout() {
-            if (!confirm('Sign out of Providence Tutorials?')) return;
-            localStorage.removeItem('pt_session');
-            window.location.href = './index.html';
-        }
-
-        function currentSession() {
-            return JSON.parse(localStorage.getItem('pt_session') || '{}');
-        }
-
-        // ─── USER MANAGEMENT ─────────────────────────────────────────────────────
-        // Passwords stored with simple encoding (btoa) — not plain text
-        function encodePW(pw) { return btoa(pw); }
-
-        function decodePW(encoded) { try { return atob(encoded); } catch (e) { return encoded; } }
-
-        function getUsers() {
-            const stored = localStorage.getItem('pt_users');
-            if (stored) return JSON.parse(stored);
-            const defaults = [
-                { uid: 'admin', password: encodePW('providence2025'), role: 'admin', name: 'Administrator',
-                    active: true },
-                { uid: 'staff', password: encodePW('staff123'), role: 'staff', name: 'Staff Member', active: true }
-            ];
-            localStorage.setItem('pt_users', JSON.stringify(defaults));
-            return defaults;
-        }
-
-        function saveUsers(u) { localStorage.setItem('pt_users', JSON.stringify(u)); }
-
-        // ── Settings tab switcher ─────────────────────────────────────────────────
-        function openSTab(tabId, el) {
-            document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active-tab'));
-            document.querySelectorAll('.s-tab').forEach(t => t.classList.remove('active'));
-            const tab = document.getElementById(tabId);
-            if (tab) tab.classList.add('active-tab');
-            if (el) el.classList.add('active');
-        }
-
-        function renderSettingsPage() {
-            openSTab('st-users', document.querySelectorAll('.s-tab')[0]);
-            const rp = document.getElementById('inline-reset-panel');
-            if (rp) rp.style.display = 'none';
-            renderUsersTable();
-            renderCodeLists();
-            const sel = document.getElementById('reset-code-user');
-            if (sel) {
-                sel.innerHTML = getUsers().map(u => '<option value="' + u.uid + '">' + u.name + ' (' + u.uid +
-                    ')</option>').join('');
+            if (confirm('Are you sure you want to logout?')) {
+                alert('🔄 Logout function - To be implemented');
             }
-            const sess = currentSession();
-            const codeBtn = document.getElementById('codes-tab-btn');
-            if (codeBtn) codeBtn.style.display = (sess.role === 'admin') ? '' : 'none';
         }
 
-        function renderUsersTable() {
-            const users = getUsers();
-            const tb = document.getElementById('users-table');
-            const sess = currentSession();
-            if (!tb) return;
-            tb.innerHTML = users.map(u => '<tr>' +
-                '<td><code style="font-size:13px;font-weight:700;color:var(--navy);">' + u.uid + '</code></td>' +
-                '<td>' + u.name + '</td>' +
-                '<td><span class="badge ' + (u.role === 'admin' ? 'badge-blue' : 'badge-yellow') + '">' + u.role +
-                '</span></td>' +
-                '<td><span class="badge ' + (u.active ? 'badge-green' : 'badge-red') + '">' + (u.active ? 'Active' :
-                    'Inactive') + '</span></td>' +
-                '<td style="display:flex;gap:5px;flex-wrap:wrap;">' +
-                '<button class="btn btn-outline btn-sm" onclick="editUser(\'' + u.uid + '\')">✏️ Edit</button>' +
-                (sess.role === 'admin' && u.uid !== sess.uid ?
-                    '<button class="btn btn-gold btn-sm" onclick="showResetPanel(\'' + u.uid +
-                    '\')">🔑 Reset PW</button>' : '') +
-                (u.uid !== sess.uid ? '<button class="btn btn-sm ' + (u.active ? 'btn-red' : 'btn-green') +
-                    '" onclick="toggleUser(\'' + u.uid + '\')">' + (u.active ? '🚫 Disable' : '✅ Enable') +
-                    '</button>' :
-                    '<span style="font-size:11px;color:var(--muted);">(you)</span>') +
-                (u.uid !== 'admin' && u.uid !== sess.uid ? '<button class="btn btn-red btn-sm" onclick="deleteUser(\'' +
-                    u.uid + '\')">🗑️</button>' : '') +
-                '</td></tr>').join('');
+        function editPayment(receiptNo) {
+            alert('🔄 Edit Payment: ' + receiptNo);
         }
 
-        function showResetPanel(uid) {
-            const sess = currentSession();
-            if (sess.role !== 'admin') { alert('Only admin can reset passwords.'); return; }
-            document.getElementById('reset-for-uid').textContent = uid;
-            document.getElementById('direct-reset-pw').value = '';
-            document.getElementById('direct-reset-pw2').value = '';
-            const panel = document.getElementById('inline-reset-panel');
-            panel.style.display = 'block';
-            panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+        // ════════════════════════════════════════════════════════════
+        // PAGE LOAD INITIALIZATION
+        // ════════════════════════════════════════════════════════════
 
-        function doDirectReset() {
-            const uid = document.getElementById('reset-for-uid').textContent.trim();
-            const pw1 = document.getElementById('direct-reset-pw').value;
-            const pw2 = document.getElementById('direct-reset-pw2').value;
-            if (!pw1 || !pw2) { alert('Please fill both password fields.'); return; }
-            if (pw1 !== pw2) { alert('Passwords do not match.'); return; }
-            if (pw1.length < 6) { alert('Password must be at least 6 characters.'); return; }
-            const users = getUsers();
-            const u = users.find(x => x.uid === uid);
-            if (!u) { alert('User not found.'); return; }
-            u.password = encodePW(pw1);
-            saveUsers(users);
-            document.getElementById('inline-reset-panel').style.display = 'none';
-            alert('✅ Password for "' + uid + '" has been reset! Share it securely.');
-        }
-
-        function saveUser() {
-            const origUid = document.getElementById('edit-uid-orig').value;
-            const uid = document.getElementById('u-uid').value.trim().toLowerCase().replace(/\s+/g, '_');
-            const name = document.getElementById('u-name').value.trim();
-            const pw = document.getElementById('u-pw').value;
-            const role = document.getElementById('u-role').value;
-            if (!uid || !name) { alert('User ID and Name are required.'); return; }
-            if (!origUid && pw.length < 6) { alert('Password must be at least 6 characters.'); return; }
-            const users = getUsers();
-            if (!origUid && users.find(u => u.uid === uid)) { alert('User ID "' + uid + '" already exists.'); return; }
-            if (origUid) {
-                const idx = users.findIndex(u => u.uid === origUid);
-                if (idx >= 0) {
-                    users[idx].name = name;
-                    users[idx].role = role;
-                    if (pw.length >= 6) users[idx].password = encodePW(pw);
-                }
-            } else {
-                users.push({ uid, password: encodePW(pw), role, name, active: true });
-            }
-            saveUsers(users);
-            clearUserForm();
-            renderUsersTable();
-            openSTab('st-users', document.querySelectorAll('.s-tab')[0]);
-            alert('✅ User saved successfully!');
-        }
-
-        function editUser(uid) {
-            const u = getUsers().find(x => x.uid === uid);
-            if (!u) return;
-            document.getElementById('edit-uid-orig').value = u.uid;
-            document.getElementById('u-uid').value = u.uid;
-            document.getElementById('u-uid').disabled = true;
-            document.getElementById('u-name').value = u.name;
-            document.getElementById('u-pw').value = '';
-            document.getElementById('u-pw-hint').textContent = 'Leave blank to keep current password.';
-            document.getElementById('u-role').value = u.role;
-            document.getElementById('user-form-title').textContent = '✏️ Edit User: ' + u.uid;
-            openSTab('st-adduser', document.querySelectorAll('.s-tab')[1]);
-        }
-
-        function clearUserForm() {
-            document.getElementById('edit-uid-orig').value = '';
-            document.getElementById('u-uid').value = '';
-            document.getElementById('u-uid').disabled = false;
-            document.getElementById('u-name').value = '';
-            document.getElementById('u-pw').value = '';
-            document.getElementById('u-pw-hint').textContent = 'Required for new users.';
-            document.getElementById('u-role').value = 'staff';
-            document.getElementById('user-form-title').textContent = '➕ Add New User';
-        }
-
-        function toggleUser(uid) {
-            const users = getUsers();
-            const u = users.find(x => x.uid === uid);
-            if (u) { u.active = !u.active;
-                saveUsers(users);
-                renderUsersTable(); }
-        }
-
-        function deleteUser(uid) {
-            if (!confirm('Delete user "' + uid + '"? This cannot be undone.')) return;
-            saveUsers(getUsers().filter(u => u.uid !== uid));
-            renderUsersTable();
-        }
-
-        function changeMyPassword() {
-            const sess = currentSession();
-            const oldPw = document.getElementById('cp-old').value;
-            const newPw = document.getElementById('cp-new').value;
-            const conf = document.getElementById('cp-confirm').value;
-            const msgEl = document.getElementById('pw-change-msg');
-            msgEl.style.display = 'none';
-            if (!oldPw || !newPw || !conf) { showPwMsg('Please fill all three fields.', '#fff0f0', '#842029'); return; }
-            if (newPw !== conf) { showPwMsg('New passwords do not match.', '#fff0f0', '#842029'); return; }
-            if (newPw.length < 6) { showPwMsg('Password must be at least 6 characters.', '#fff0f0', '#842029'); return; }
-            const users = getUsers();
-            const u = users.find(x => x.uid === sess.uid);
-            if (!u || decodePW(u.password) !== oldPw) { showPwMsg('❌ Current password is incorrect.', '#fff0f0',
-                    '#842029'); return; }
-            u.password = encodePW(newPw);
-            saveUsers(users);
-            showPwMsg('✅ Password updated! Logging you out now…', '#d4edda', '#155724');
-            setTimeout(doLogout, 1800);
-        }
-
-        function showPwMsg(txt, bg, color) {
-            const el = document.getElementById('pw-change-msg');
-            el.textContent = txt;
-            el.style.background = bg;
-            el.style.color = color;
-            el.style.border = '1px solid ' + color;
-            el.style.display = 'block';
-        }
-
-        // ─── ACCESS CODES ─────────────────────────────────────────────────────────
-        function getCodes() { return JSON.parse(localStorage.getItem('pt_codes') || '[]'); }
-
-        function saveCodes(codes) { localStorage.setItem('pt_codes', JSON.stringify(codes)); }
-
-        function mkCode() {
-            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-            let code = '';
-            for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
-            return code;
-        }
-
-        function generateCode(type) {
-            const sess = currentSession();
-            if (sess.role !== 'admin') { alert('Only admin can generate access codes.'); return; }
-            const code = mkCode();
-            const ttl = type === 'reset' ? 2 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
-            const target = type === 'reset' ? (document.getElementById('reset-code-user').value || null) : null;
-            if (type === 'reset' && !target) { alert('Please select a user for the reset code.'); return; }
-            const codes = getCodes();
-            codes.push({ code, type, target, used: false, createdAt: Date.now(), expiresAt: Date.now() + ttl,
-                by: sess.uid });
-            saveCodes(codes);
-            const dispId = type === 'reset' ? 'reset-code-display' : 'enroll-code-display';
-            const btnId = type === 'reset' ? 'reset-copy-btn' : 'enroll-copy-btn';
-            const dispEl = document.getElementById(dispId);
-            const btnEl = document.getElementById(btnId);
-            dispEl.textContent = code;
-            dispEl.style.display = 'block';
-            btnEl.style.display = 'inline-flex';
-            renderCodeLists();
-        }
-
-        function copyCode(dispId, btnId) {
-            const txt = document.getElementById(dispId).textContent;
-            navigator.clipboard.writeText(txt).then(() => {
-                const b = document.getElementById(btnId);
-                b.textContent = '✅ Copied!';
-                setTimeout(() => b.textContent = '📋 Copy', 2000);
-            });
-        }
-
-        function renderCodeLists() {
-            const now = Date.now();
-            let codes = getCodes();
-            // Clean expired codes
-            codes = codes.filter(c => c.expiresAt > now);
-            saveCodes(codes);
-            const enroll = codes.filter(c => c.type === 'enroll');
-            const reset = codes.filter(c => c.type === 'reset');
-
-            const rowHtml = c =>
-                '<tr>' +
-                '<td><code style="font-size:15px;font-weight:700;letter-spacing:3px;">' + c.code + '</code></td>' +
-                '<td>' + (c.target ? '<strong>' + c.target + '</strong>' : '— any staff —') + '</td>' +
-                '<td>' + (c.used ? '<span class="badge badge-red">Used</span>' :
-                    '<span class="badge badge-green">Active</span>') + '</td>' +
-                '<td style="font-size:12px;">' + new Date(c.expiresAt).toLocaleString('en-IN', { day: '2-digit',
-                    month: 'short', hour: '2-digit', minute: '2-digit' }) + '</td>' +
-                '<td><button class="btn btn-red btn-sm" onclick="revokeCode(\'' + c.code + '\')">🗑️ Revoke</button></td>' +
-                '</tr>';
-
-            const tbl = rows => rows.length ?
-                '<table><thead><tr><th>Code</th><th>For User</th><th>Status</th><th>Expires</th><th>Action</th></tr></thead><tbody>' +
-                rows.map(rowHtml).join('') + '</tbody></table>' :
-                '<p style="font-size:13px;color:var(--muted);">No active codes. Generate one above.</p>';
-
-            const el1 = document.getElementById('enroll-codes-list');
-            const el2 = document.getElementById('reset-codes-list');
-            if (el1) el1.innerHTML = tbl(enroll);
-            if (el2) el2.innerHTML = tbl(reset);
-        }
-
-        function revokeCode(code) {
-            if (!confirm('Revoke code ' + code + '?')) return;
-            saveCodes(getCodes().filter(c => c.code !== code));
-            renderCodeLists();
-        }
-
-        // ─── ADD STUDENT GATE ─────────────────────────────────────────────────────
-        function openStudentGated() {
-            const sess = currentSession();
-            if (!activeSession && sess.role !== 'admin') {
-                alert('No active session selected. Please ask admin to set up a session first.');
-                return;
-            }
-            if (sess.role === 'admin') { openStudentModal(); return; }
-            document.getElementById('ac-input').value = '';
-            document.getElementById('ac-error').style.display = 'none';
-            document.getElementById('ac-modal').classList.add('open');
-            setTimeout(() => document.getElementById('ac-input').focus(), 150);
-        }
-
-        function verifyEnrollCode() {
-            const entered = document.getElementById('ac-input').value.trim().toUpperCase();
-            const errEl = document.getElementById('ac-error');
-            errEl.style.display = 'none';
-            if (entered.length !== 8) { errEl.textContent = 'Please enter the complete 8-character code.';
-                errEl.style.display = 'block'; return; }
-            const now = Date.now();
-            const codes = getCodes();
-            const idx = codes.findIndex(c => c.code === entered && c.type === 'enroll' && !c.used && c.expiresAt > now);
-            if (idx === -1) { errEl.textContent = 'Invalid, expired, or already-used code.';
-                errEl.style.display = 'block'; return; }
-            codes[idx].used = true;
-            saveCodes(codes);
-            document.getElementById('ac-modal').classList.remove('open');
-            openStudentModal();
-        }
-
-        // ─── INITIALIZATION ───────────────────────────────────────────────────────
-        // (Auth guard above handles DOMContentLoaded + initial render)
-        // Also render dashboard immediately if DOM already loaded
-        if (document.readyState === 'complete' || document.readyState === 'interactive') {
-            migrateData();
-            refreshSessionSelector();
-            renderDashboard();
-            renderBackupPage();
-        }
+        document.addEventListener('DOMContentLoaded', initializeDropdowns);
     </script>
 </body>
 </html>
