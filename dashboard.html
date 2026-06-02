@@ -556,14 +556,9 @@ function getDeposited(studentId) {
 function getDueMonths(student) {
   const joining = new Date(student.joining);
   const now = new Date();
-  // Fee starts from the 1st of the month AFTER joining month
   const firstDue = new Date(joining.getFullYear(), joining.getMonth() + 1, 1);
   if (firstDue > now) return 0;
-  // Number of months from firstDue month up to and including current month
-  return Math.max(0,
-    (now.getFullYear() - firstDue.getFullYear()) * 12 +
-    (now.getMonth() - firstDue.getMonth()) + 1
-  );
+  return Math.max(0, (now.getFullYear() - firstDue.getFullYear()) * 12 + (now.getMonth() - firstDue.getMonth()) + 1);
 }
 
 function getTotalDue(student) {
@@ -596,13 +591,20 @@ function getNextPaymentDate(student) {
 }
 
 function generateScholarNumber(cls, sessionId) {
-  const sess = sessions.find(s => s.id === sessionId);
-  const yy = sess ? String(sess.startYear).slice(-2) : String(new Date().getFullYear()).slice(-2);
+  // Extract class number from "Class 1" → "1", "Class 10" → "10"
+  const classNum = parseInt(String(cls).replace(/[^0-9]/g, '')) || 1;
+  // First 2 digits: class number zero-padded (01–12)
+  const prefix = String(classNum).padStart(2, '0');
+  // Last 3 digits: student serial in this class+session (001, 002 …)
   const existing = students
-    .filter(s => s.class === cls && s.session === sessionId && s.scholarNo && s.scholarNo.length >= 6)
-    .map(s => parseInt(String(s.scholarNo).slice(2)) || 0);
+    .filter(s => s.class === cls && s.session === sessionId && s.scholarNo)
+    .map(s => {
+      const n = parseInt(String(s.scholarNo).slice(-3));
+      return isNaN(n) ? 0 : n;
+    });
   const serial = existing.length ? Math.max(...existing) + 1 : 1;
-  return yy + String(serial).padStart(4, '0');
+  return prefix + String(serial).padStart(3, '0');
+  // Result: exactly 5 digits, e.g. 01001, 10035, 12003
 }
 
 // ─── ATTENDANCE HELPERS (NEW FEATURE) ──────────────────────────
@@ -760,13 +762,9 @@ function renderStudents() {
   document.getElementById('content-area').innerHTML = `
     <div style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
       <button class="btn btn-primary" onclick="openStudentForm()">➕ Add Student</button>
-      <input type="text" id="student-search" placeholder="🔍 Search by name..." oninput="filterStudentsTable()" style="min-width:200px; flex:1;">
-      <select id="class-filter" onchange="filterStudentsTable()" style="min-width:130px;">
-        <option value="">All Classes</option>
-        ${Array.from({length:12},(_,i)=>`<option value="Class ${i+1}">Class ${i+1}</option>`).join('')}
-      </select>
-      <button class="btn btn-outline" onclick="document.getElementById('class-filter').value='';filterStudentsTable();">📋 All</button>
-      <button class="btn btn-outline" onclick="filterOverdue()">⚠️ Overdue</button>
+      <input type="text" id="student-search" placeholder="🔍 Search students..." oninput="filterStudentsTable()" style="flex:1; min-width:200px;">
+      <button class="btn btn-outline" onclick="window.location.search='?overdue=true';renderStudents();">⚠️ Show Overdue</button>
+      <button class="btn btn-outline" onclick="window.location.search='';renderStudents();">📋 All Students</button>
     </div>
     
     <div class="panel">
@@ -784,7 +782,7 @@ function renderStudents() {
               const due = getTotalDue(s);
               const att = getAttendancePercent(s.id);
               return `
-                <tr class="${isOverdue(s) ? 'overdue-row' : ''}" data-name="${s.name.toLowerCase()}" data-class="${s.class.toLowerCase()}">
+                <tr class="${isOverdue(s) ? 'overdue-row' : ''}" data-name="${s.name.toLowerCase()}">
                   <td><span class="badge badge-blue">${s.scholarNo || '—'}</span></td>
                   <td>${s.photo ? `<img src="${s.photo}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` : '—'}</td>
                   <td><strong>${s.name}</strong></td>
@@ -798,7 +796,7 @@ function renderStudents() {
                   <td style="display:flex; gap:4px; flex-wrap:wrap;">
                     <button class="btn btn-outline btn-sm" onclick="editStudentForm('${s.id}')">✏️</button>
                     <button class="btn btn-gold btn-sm" onclick="generateIDCard('${s.id}')">🪪 ID</button>
-                    <button class="btn btn-sm btn-green" onclick="showPage('ledger'); setTimeout(()=>showLedger('${s.id}'),150);">📘</button>
+                    <button class="btn btn-sm btn-green" onclick="showLedger('${s.id}')">📘</button>
                     <button class="btn btn-red btn-sm" onclick="deleteStudentConfirm('${s.id}')">🗑️</button>
                   </td>
                 </tr>
@@ -813,24 +811,10 @@ function renderStudents() {
 
 function filterStudentsTable() {
   const query = (document.getElementById('student-search')?.value || '').toLowerCase();
-  const classFilter = (document.getElementById('class-filter')?.value || '').toLowerCase();
   const rows = document.querySelectorAll('#students-table tbody tr');
   rows.forEach(row => {
-    const name = (row.getAttribute('data-name') || '').toLowerCase();
-    const cls  = (row.getAttribute('data-class') || '').toLowerCase();
-    const matchName  = !query || name.includes(query);
-    const matchClass = !classFilter || cls === classFilter;
-    row.style.display = (matchName && matchClass) ? '' : 'none';
-  });
-}
-
-function filterOverdue() {
-  document.getElementById('student-search').value = '';
-  document.getElementById('class-filter').value = '';
-  const rows = document.querySelectorAll('#students-table tbody tr');
-  rows.forEach(row => {
-    const isOverdueRow = row.classList.contains('overdue-row');
-    row.style.display = isOverdueRow ? '' : 'none';
+    const name = row.getAttribute('data-name') || '';
+    row.style.display = name.includes(query) ? '' : 'none';
   });
 }
 
@@ -981,52 +965,34 @@ function deleteStudentConfirm(studentId) {
 function generateIDCard(studentId) {
   const student = students.find(s => s.id === studentId);
   if (!student) return;
-
-  const noPhoto = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23ddd'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999' font-size='13'%3ENo Photo%3C/text%3E%3C/svg%3E";
-
+  
   const idCardHTML = `
-    <div class="id-card">
-      <div class="id-card-header">
-        <h2 style="margin:0; font-size:16px;">Providence Tutorials</h2>
-        <p style="margin:4px 0 0; font-size:11px;">Agar Malwa, Madhya Pradesh</p>
-      </div>
-      <img src="${student.photo || noPhoto}" class="id-card-photo" alt="Student Photo">
-      <h3 style="margin:8px 0 4px;">${student.name}</h3>
-      <table style="width:100%; margin:10px 0; text-align:left; font-size:13px;">
-        <tr><td style="font-weight:600; padding:3px 6px;">Scholar No.</td><td style="font-family:monospace; color:#c9a84c; font-weight:700;">${student.scholarNo || '—'}</td></tr>
-        <tr><td style="font-weight:600; padding:3px 6px;">Class</td><td>${student.class}</td></tr>
-        <tr><td style="font-weight:600; padding:3px 6px;">Session</td><td>${student.session || activeSession}</td></tr>
-        <tr><td style="font-weight:600; padding:3px 6px;">Father</td><td>${student.father || '—'}</td></tr>
-        <tr><td style="font-weight:600; padding:3px 6px;">Contact</td><td>${student.wa || '—'}</td></tr>
-      </table>
-      <p style="font-size:10px; color:#7a7a8a; margin:0;">Computer-generated ID card</p>
-    </div>
-  `;
-
-  // Write into the dedicated print-area (no duplicate id)
-  const printArea = document.getElementById('print-area');
-  printArea.innerHTML = idCardHTML;
-  printArea.style.display = 'block';
-
-  // Show it in a modal so user can review before printing
-  const modalHTML = `
-    <div class="modal-overlay open" id="idcard-modal">
-      <div class="modal" style="max-width:420px;">
-        <div class="modal-header">
-          <h3>🪪 Student ID Card</h3>
-          <button class="modal-close" onclick="closeModal('idcard-modal')">✕</button>
+    <div id="print-area" style="display:block;">
+      <div class="id-card">
+        <div class="id-card-header">
+          <h2 style="margin:0;">Providence Tutorials</h2>
+          <p style="margin:5px 0 0;">Agar Malwa, Madhya Pradesh</p>
         </div>
-        <div class="modal-body" style="display:flex; flex-direction:column; align-items:center; gap:14px;">
-          ${idCardHTML}
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-outline" onclick="closeModal('idcard-modal')">Close</button>
-          <button class="btn btn-primary" onclick="window.print()">🖨️ Print ID Card</button>
-        </div>
+        <img src="${student.photo || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23ddd%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22 font-size=%2214%22%3ENo Photo%3C/text%3E%3C/svg%3E'}" 
+             class="id-card-photo" alt="Student Photo">
+        <h3>${student.name}</h3>
+        <table style="width:100%; margin:15px 0;">
+          <tr><td style="font-weight:600;">Scholar No.</td><td>${student.scholarNo || '—'}</td></tr>
+          <tr><td style="font-weight:600;">Class</td><td>${student.class}</td></tr>
+          <tr><td style="font-weight:600;">Session</td><td>${student.session || activeSession}</td></tr>
+          <tr><td style="font-weight:600;">Father's Name</td><td>${student.father || '—'}</td></tr>
+        </table>
+        <p style="font-size:11px; color:var(--muted);">This is a computer-generated ID card.</p>
+        <button class="btn btn-primary no-print" onclick="window.print()" style="margin-top:10px;">🖨️ Print ID Card</button>
       </div>
     </div>
   `;
-  document.getElementById('modals-container').innerHTML = modalHTML;
+  
+  document.getElementById('print-area').innerHTML = idCardHTML;
+  document.getElementById('print-area').style.display = 'block';
+  
+  // Scroll to print area
+  document.getElementById('print-area').scrollIntoView({ behavior: 'smooth' });
 }
 
 // ─── FEE COLLECTION ─────────────────────────────────────────────
@@ -1073,9 +1039,10 @@ function renderFeeCollection() {
           <p style="color:var(--muted);">Select a student to see fee details.</p>
         </div>
         
-        <div style="display:flex; gap:10px;">
-          <button class="btn btn-primary" onclick="recordPayment()">✅ Record Payment</button>
-          <button class="btn btn-gold" onclick="recordAndPrintReceipt()">🖨️ Record & Print</button>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <button class="btn btn-primary" id="btn-record" onclick="recordPayment(false)">✅ Record Payment</button>
+          <button class="btn btn-gold"    id="btn-record-print" onclick="recordAndPrintReceipt()">🖨️ Record & Print</button>
+          <span id="payment-done-msg" style="display:none; color:var(--green); font-weight:600; font-size:13px;">✅ Payment saved! Select a new student to record another.</span>
         </div>
       </div>
     </div>
@@ -1086,7 +1053,12 @@ function updateFeePreview() {
   const studentId = document.getElementById('fee-student').value;
   const student = students.find(s => s.id === studentId);
   const preview = document.getElementById('fee-preview');
-  
+
+  // If user picks a different student, unlock buttons
+  if (_paymentLock && _lastPayment && _lastPayment.studentId !== studentId) {
+    unlockPaymentButtons();
+  }
+
   if (!student) {
     preview.innerHTML = '<p style="color:var(--muted);">Select a student to see fee details.</p>';
     return;
@@ -1111,19 +1083,51 @@ function updateFeePreview() {
   }
 }
 
-function recordPayment() {
+// ─── PAYMENT LOCK: prevents double-recording ─────────────────────
+let _paymentLock = false;
+let _lastPayment = null;
+
+function lockPaymentButtons(receipt) {
+  _paymentLock = true;
+  _lastPayment = receipt;
+  const b1 = document.getElementById('btn-record');
+  const b2 = document.getElementById('btn-record-print');
+  const msg = document.getElementById('payment-done-msg');
+  if (b1) { b1.disabled = true; b1.style.opacity = '0.45'; b1.style.cursor = 'not-allowed'; }
+  if (b2) { b2.disabled = true; b2.style.opacity = '0.45'; b2.style.cursor = 'not-allowed'; }
+  if (msg) msg.style.display = 'inline';
+}
+
+function unlockPaymentButtons() {
+  _paymentLock = false;
+  _lastPayment = null;
+  const b1 = document.getElementById('btn-record');
+  const b2 = document.getElementById('btn-record-print');
+  const msg = document.getElementById('payment-done-msg');
+  if (b1) { b1.disabled = false; b1.style.opacity = ''; b1.style.cursor = ''; }
+  if (b2) { b2.disabled = false; b2.style.opacity = ''; b2.style.cursor = ''; }
+  if (msg) msg.style.display = 'none';
+}
+
+function recordPayment(silent = false) {
+  // Prevent double-recording
+  if (_paymentLock) {
+    if (!silent) alert('⚠️ Payment already recorded! Select a different student or refresh the fee form to record another payment.');
+    return _lastPayment;
+  }
+
   const studentId = document.getElementById('fee-student').value;
-  const amount = parseFloat(document.getElementById('fee-amount').value) || 0;
-  const date = document.getElementById('fee-date').value;
-  const month = document.getElementById('fee-month').value;
-  const mode = document.getElementById('fee-mode').value;
-  const note = document.getElementById('fee-note').value;
-  
+  const amount    = parseFloat(document.getElementById('fee-amount').value) || 0;
+  const date      = document.getElementById('fee-date').value;
+  const month     = document.getElementById('fee-month').value;
+  const mode      = document.getElementById('fee-mode').value;
+  const note      = document.getElementById('fee-note').value;
+
   if (!studentId || !amount || !date || !month) {
     alert('Please fill all required fields.');
     return null;
   }
-  
+
   const payment = {
     receiptId: nextReceiptId++,
     studentId,
@@ -1133,34 +1137,39 @@ function recordPayment() {
     mode,
     note
   };
-  
+
   payments.push(payment);
   saveAll();
-  
+
   const student = students.find(s => s.id === studentId);
   const advance = student ? getAdvanceBalance(student) : 0;
-  
-  alert(`✅ Payment recorded! Receipt #${payment.receiptId}\n${advance > 0 ? '📌 Advance balance: ₹' + advance.toLocaleString('en-IN') : ''}`);
-  
-  document.getElementById('fee-amount').value = '';
+
+  if (!silent) {
+    alert('✅ Payment recorded! Receipt #' + payment.receiptId +
+      (advance > 0 ? '\n📌 Advance balance: ₹' + advance.toLocaleString('en-IN') : ''));
+  }
+
+  // Lock buttons immediately after recording
+  lockPaymentButtons(payment);
   updateFeePreview();
   return payment;
 }
 
 function recordAndPrintReceipt() {
-  const payment = recordPayment();
+  // If already locked, _lastPayment has the payment — just print it
+  const payment = _paymentLock ? _lastPayment : recordPayment(true);
   if (!payment) return;
 
-  // Navigate to receipt page then select and print
+  // Navigate to receipt page, select this payment, then print
   showPage('receipt');
   setTimeout(() => {
     const receiptSelect = document.getElementById('receipt-select');
     if (receiptSelect) {
       receiptSelect.value = payment.receiptId;
-      previewReceipt(); // also fills #print-area
+      previewReceipt();
       setTimeout(() => window.print(), 400);
     } else {
-      alert('Receipt page did not load. Please go to Receipt page and select manually.');
+      alert('Please go to the Receipt page and select receipt #' + payment.receiptId + ' to print.');
     }
   }, 500);
 }
@@ -1230,58 +1239,15 @@ function renderReceiptPage() {
           </select>
         </div>
         
-        <div id="receipt-preview" style="background:#fff; padding:20px; border:2px solid var(--navy); border-radius:8px; min-height:120px;">
-          <p style="text-align:center; color:var(--muted); padding:20px 0;">Select a payment to preview receipt</p>
+        <div id="receipt-preview" style="background:#fff; padding:20px; border:2px solid var(--navy); border-radius:8px;">
+          <p style="text-align:center; color:var(--muted);">Select a payment to preview receipt</p>
         </div>
         
         <div style="margin-top:16px; display:flex; gap:10px;" class="no-print">
-          <button class="btn btn-primary" onclick="previewReceipt(); setTimeout(()=>window.print(),100);">🖨️ Print Receipt</button>
+          <button class="btn btn-primary" onclick="window.print()">🖨️ Print</button>
           <button class="btn btn-gold" id="wa-receipt-btn" style="display:none;" onclick="sendReceiptWhatsApp()">📲 Send via WhatsApp</button>
         </div>
       </div>
-    </div>
-  `;
-}
-
-function buildReceiptHTML(payment, student) {
-  const due = student ? getTotalDue(student) : 0;
-  const advance = student ? getAdvanceBalance(student) : 0;
-  const nextDate = student ? getNextPaymentDate(student) : '—';
-  const monthsCovered = student && student.monthlyFee > 0 ? Math.floor(payment.amount / student.monthlyFee) : 1;
-  return `
-    <div style="max-width:148mm; margin:0 auto; font-family:'DM Sans',sans-serif; font-size:13px; padding:16px; border:2px solid #0f2044; border-radius:8px;">
-      <div style="text-align:center; margin-bottom:12px;">
-        <h2 style="color:#0f2044; font-family:'Playfair Display',serif; margin:0;">Providence Tutorials</h2>
-        <p style="font-size:11px; color:#7a7a8a; margin:2px 0;">Agar Malwa, Madhya Pradesh</p>
-        <h4 style="margin:6px 0 0; color:#c9a84c; letter-spacing:1px;">FEE PAYMENT RECEIPT</h4>
-      </div>
-      <hr style="border:none; border-top:1.5px dashed #e8e0d0; margin:10px 0;">
-      <table style="width:100%; border-collapse:collapse; font-size:12px;">
-        <tr><td style="padding:4px 0; color:#7a7a8a; width:45%;">Receipt No.</td><td style="font-weight:700; color:#0f2044;">#${payment.receiptId}</td></tr>
-        <tr><td style="padding:4px 0; color:#7a7a8a;">Date</td><td>${payment.date}</td></tr>
-        <tr><td style="padding:4px 0; color:#7a7a8a;">Student Name</td><td style="font-weight:700;">${student?.name || '—'}</td></tr>
-        <tr><td style="padding:4px 0; color:#7a7a8a;">Scholar No.</td><td style="font-family:monospace; font-weight:700; color:#c9a84c;">${student?.scholarNo || '—'}</td></tr>
-        <tr><td style="padding:4px 0; color:#7a7a8a;">Class</td><td>${student?.class || '—'}</td></tr>
-        <tr><td style="padding:4px 0; color:#7a7a8a;">Father's Name</td><td>${student?.father || '—'}</td></tr>
-        <tr><td style="padding:4px 0; color:#7a7a8a;">Session</td><td>${student?.session || activeSession}</td></tr>
-        <tr><td style="padding:4px 0; color:#7a7a8a;">Month</td><td>${payment.month}</td></tr>
-        <tr><td style="padding:4px 0; color:#7a7a8a;">Months Covered</td><td>${monthsCovered}</td></tr>
-        <tr><td style="padding:4px 0; color:#7a7a8a;">Payment Mode</td><td>${payment.mode}</td></tr>
-        ${payment.note ? `<tr><td style="padding:4px 0; color:#7a7a8a;">Note</td><td>${payment.note}</td></tr>` : ''}
-      </table>
-      <hr style="border:none; border-top:2px solid #0f2044; margin:10px 0;">
-      <div style="display:flex; justify-content:space-between; font-size:15px; font-weight:700;">
-        <span>Amount Paid</span>
-        <span style="color:#1a7a4a;">₹${payment.amount.toLocaleString('en-IN')}</span>
-      </div>
-      ${due > 0 ? `<div style="display:flex; justify-content:space-between; font-size:12px; margin-top:5px; color:#c0392b;"><span>Remaining Balance Due</span><span>₹${due.toLocaleString('en-IN')}</span></div>` : ''}
-      ${advance > 0 ? `<div style="display:flex; justify-content:space-between; font-size:12px; margin-top:5px; color:#1a5276;"><span>Advance Balance</span><span>₹${advance.toLocaleString('en-IN')}</span></div>` : ''}
-      <div style="display:flex; justify-content:space-between; font-size:12px; margin-top:5px;">
-        <span style="color:#7a7a8a;">Next Payment Due</span>
-        <span style="font-weight:600;">${nextDate}</span>
-      </div>
-      <hr style="border:none; border-top:1px dashed #e8e0d0; margin:10px 0;">
-      <p style="text-align:center; font-size:10px; color:#7a7a8a; margin:0;">This is a computer-generated receipt — Providence Tutorials 🙏</p>
     </div>
   `;
 }
@@ -1291,26 +1257,37 @@ function previewReceipt() {
   const payment = payments.find(p => p.receiptId === receiptId);
   const preview = document.getElementById('receipt-preview');
   const waBtn = document.getElementById('wa-receipt-btn');
-
+  
   if (!payment || !preview) {
-    if (preview) preview.innerHTML = '<p style="text-align:center; color:#7a7a8a; padding:20px;">Select a payment to preview receipt.</p>';
+    if (preview) preview.innerHTML = '<p style="text-align:center;">Select a payment to preview</p>';
     if (waBtn) waBtn.style.display = 'none';
     return;
   }
-
+  
   const student = students.find(s => s.id === payment.studentId);
-  if (waBtn) waBtn.style.display = (student && student.wa) ? 'inline-flex' : 'none';
-
-  // Render in preview area
-  const html = buildReceiptHTML(payment, student);
-  preview.innerHTML = html;
-
-  // Also copy into #print-area so @media print works correctly
-  const printArea = document.getElementById('print-area');
-  if (printArea) {
-    printArea.innerHTML = html;
-    printArea.style.display = 'block';
-  }
+  if (waBtn) waBtn.style.display = student?.wa ? 'inline-flex' : 'none';
+  
+  preview.innerHTML = `
+    <div style="text-align:center; margin-bottom:15px;">
+      <h3>Providence Tutorials</h3>
+      <p style="font-size:12px; color:var(--muted);">Agar Malwa, Madhya Pradesh</p>
+      <h4>Fee Payment Receipt</h4>
+    </div>
+    <hr>
+    <table style="width:100%;">
+      <tr><td><strong>Receipt No.</strong></td><td>#${payment.receiptId}</td></tr>
+      <tr><td><strong>Date</strong></td><td>${payment.date}</td></tr>
+      <tr><td><strong>Student Name</strong></td><td>${student?.name || '—'}</td></tr>
+      <tr><td><strong>Scholar No.</strong></td><td>${student?.scholarNo || '—'}</td></tr>
+      <tr><td><strong>Class</strong></td><td>${student?.class || '—'}</td></tr>
+      <tr><td><strong>Month</strong></td><td>${payment.month}</td></tr>
+      <tr><td><strong>Amount Paid</strong></td><td><strong>₹${payment.amount.toLocaleString('en-IN')}</strong></td></tr>
+      <tr><td><strong>Mode</strong></td><td>${payment.mode}</td></tr>
+      ${student ? `<tr><td><strong>Next Due Date</strong></td><td>${getNextPaymentDate(student)}</td></tr>` : ''}
+    </table>
+    <hr>
+    <p style="text-align:center; font-size:11px; color:var(--muted);">This is a computer-generated receipt.</p>
+  `;
 }
 
 // NEW FEATURE: Send receipt via WhatsApp
@@ -1473,7 +1450,7 @@ function renderReports() {
       </div>
     </div>
     
-    <button class="btn btn-primary" onclick="printCurrentPage()">🖨️ Print Report</button>
+    <button class="btn btn-primary" onclick="window.print()">🖨️ Print Report</button>
   `;
 }
 
@@ -1493,13 +1470,18 @@ function renderLedger() {
           </select>
         </div>
         <div id="ledger-detail"></div>
-        <button class="btn btn-primary no-print" onclick="printCurrentPage()" style="margin-top:16px;">🖨️ Print Ledger</button>
+        <button class="btn btn-primary no-print" onclick="window.print()" style="margin-top:16px;">🖨️ Print Ledger</button>
       </div>
     </div>
   `;
 }
 
 function showLedger(studentId) {
+  if (typeof studentId === 'string' && studentId.includes('showLedger')) {
+    // Called from student row
+    return;
+  }
+  
   const selectEl = document.getElementById('ledger-student-select');
   if (selectEl && studentId) selectEl.value = studentId;
   
@@ -1773,42 +1755,29 @@ function renderSettingsPage() {
   `;
 }
 
-async function changePassword() {
+function changePassword() {
   const oldPw = document.getElementById('cp-old')?.value;
   const newPw = document.getElementById('cp-new')?.value;
-
+  
   if (!oldPw || !newPw || newPw.length < 6) {
-    alert('Please fill both fields (min 6 characters for new password).');
+    alert('Please fill both fields (min 6 characters).');
     return;
   }
-
+  
   const users = JSON.parse(localStorage.getItem('pt_users') || '[]');
   const currentUser = JSON.parse(localStorage.getItem('pt_session') || '{}');
+  
   const userIdx = users.findIndex(u => u.uid === currentUser.uid);
-
-  if (userIdx < 0) { alert('User not found. Please login again.'); doLogout(); return; }
-
-  const u = users[userIdx];
-  // Support SHA-256 (new) and btoa (legacy)
-  let matched = false;
-  if (u.pwType === 'sha256') {
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(oldPw));
-    const hash = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-    matched = (u.password === hash);
-  } else {
-    // legacy btoa or plain
-    matched = (u.password === btoa(oldPw) || u.password === oldPw);
+  if (userIdx >= 0) {
+    if (users[userIdx].password !== btoa(oldPw)) {
+      alert('Current password is incorrect.');
+      return;
+    }
+    users[userIdx].password = btoa(newPw);
+    localStorage.setItem('pt_users', JSON.stringify(users));
+    alert('✅ Password updated! Please login again.');
+    doLogout();
   }
-
-  if (!matched) { alert('❌ Current password is incorrect.'); return; }
-
-  // Save new password as SHA-256
-  const buf2 = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(newPw));
-  u.password = Array.from(new Uint8Array(buf2)).map(b=>b.toString(16).padStart(2,'0')).join('');
-  u.pwType = 'sha256';
-  localStorage.setItem('pt_users', JSON.stringify(users));
-  alert('✅ Password updated successfully! Please login again.');
-  doLogout();
 }
 
 // ─── MODAL HELPERS ───────────────────────────────────────────────
@@ -1817,20 +1786,51 @@ function closeModal(modalId) {
   if (modal) modal.remove();
 }
 
-// ─── PRINT UTILITY ───────────────────────────────────────────────
-// Copies current visible content into #print-area so @media print works
-function printCurrentPage() {
-  const content = document.getElementById('content-area');
-  const printArea = document.getElementById('print-area');
-  if (!content || !printArea) { window.print(); return; }
-  printArea.innerHTML = content.innerHTML;
-  printArea.style.display = 'block';
-  window.print();
-  // Don't reset so user can re-print
+// ─── AUTO BACKUP HELPER ──────────────────────────────────────────
+function triggerAutoBackup() {
+  try {
+    const data = {
+      version: 3,
+      exportedAt: new Date().toISOString(),
+      autoBackup: true,
+      students,
+      payments,
+      sessions,
+      activeSession,
+      attendance,
+      promotionLog,
+      nextStudentId,
+      nextReceiptId
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    const ts   = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    a.download = 'providence_auto_backup_' + ts + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    return true;
+  } catch(e) {
+    console.error('Auto backup failed:', e);
+    return false;
+  }
 }
 
 // ─── LOGOUT ──────────────────────────────────────────────────────
 function doLogout() {
+  // Auto-backup before logout
+  const backedUp = triggerAutoBackup();
+
+  // Show confirmation with backup status
+  const msg = backedUp
+    ? '✅ Auto-backup downloaded!\n\nYour data has been saved to a JSON file.\nLogging out now…'
+    : '⚠️ Auto-backup failed. Please manually backup from the Backup page.\n\nLogging out anyway…';
+
+  alert(msg);
+
   localStorage.removeItem('pt_session');
   window.location.href = 'index.html';
 }
@@ -1846,6 +1846,8 @@ function doLogout() {
   
   // Check session expiry (8 hours)
   if (Date.now() - (session.loginTime || 0) > 8 * 60 * 60 * 1000) {
+    alert('⏰ Your session has expired after 8 hours.\nAuto-backup will be downloaded before logout.');
+    triggerAutoBackup();
     localStorage.removeItem('pt_session');
     window.location.href = 'index.html';
     return;
@@ -1876,8 +1878,22 @@ function viewReceipt(receiptId) {
       select.value = receiptId;
       previewReceipt();
     }
-  }, 400);
+  }, 200);
 }
+
+// ─── WARN BEFORE BROWSER CLOSE ───────────────────────────────────
+// Trigger auto-backup when browser tab/window is closed
+window.addEventListener('beforeunload', function(e) {
+  // Only trigger if user is logged in
+  const sess = localStorage.getItem('pt_session');
+  if (sess) {
+    triggerAutoBackup();
+    // Show browser's native "Leave site?" dialog
+    e.preventDefault();
+    e.returnValue = 'Auto-backup will be downloaded. Are you sure you want to leave?';
+    return e.returnValue;
+  }
+});
 
 console.log('✅ Providence Tutorials ERP - All features loaded successfully!');
 console.log('📊 Dashboard | 👨‍🎓 Students | 💰 Fees | 🗂️ Records | 📲 Reminders | 🖨️ Receipt | 📋 Reports | 📘 Ledger | 📅 Attendance | 💾 Backup');
